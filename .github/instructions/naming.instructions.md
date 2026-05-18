@@ -4,7 +4,7 @@ applyTo: "**/*"
 
 # Naming conventions
 
-Follow the project-specific naming rules in `.github/project/guidelines/naming.md`.
+Follow the project-specific naming rules in `shared/project/guidelines/naming.md`.
 
 Key rules:
 - Branch names: `design/WI-<id>` for design PRs, `story/WI-<id>` for features.

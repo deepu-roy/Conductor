@@ -1,6 +1,6 @@
 # CLAUDE.md — Global policy
 
-This file is loaded at the start of every Claude Code session in this repo. It sets durable, org-wide rules. Project-specific rules live in `.claude/project/CLAUDE.md` and take precedence on conflict.
+This file is loaded at the start of every Claude Code session in this repo. It sets durable, org-wide rules. Project-specific rules live in `shared/project/CLAUDE.md` and take precedence on conflict.
 
 ## Non-negotiable rules
 
@@ -9,7 +9,7 @@ This file is loaded at the start of every Claude Code session in this repo. It s
 3. **Never touch protected files.** Pipeline YAML, secrets, and master skills are read-only to Claude. Hooks enforce this.
 4. **Never approve or merge.** PR reviewer subagents post comments only. Humans approve and merge.
 5. **Every claim of "done" needs evidence.** Tests run, linter clean, type-check passed — not just "looks right".
-6. **Project overrides win.** On any conflict between this file and `.claude/project/`, follow the project layer and log the conflict in the run trace.
+6. **Project overrides win.** On any conflict between this file and `shared/project/`, follow the project layer and log the conflict in the run trace.
 
 ## Tool preferences
 
@@ -28,7 +28,7 @@ This file is loaded at the start of every Claude Code session in this repo. It s
 
 - No empty catch blocks. No broad `except:` in Python. No swallowed errors.
 - All errors log with context (what was being attempted, inputs, not secrets).
-- Project guidelines override for specific idioms — consult `.claude/project/guidelines/error-handling.md`.
+- Project guidelines override for specific idioms — consult `shared/project/guidelines/error-handling.md`.
 
 ## Comments in generated code
 
@@ -40,10 +40,10 @@ This file is loaded at the start of every Claude Code session in this repo. It s
 
 Every skill, before generating its primary artifact, loads in this order:
 
-1. `.claude/project/PROFILE.md`
-2. `.claude/project/CLAUDE.md` (if present)
-3. `.claude/project/overrides/<this-skill-name>.md` (if present)
-4. All files in `.claude/project/guidelines/`
-5. Stack files in `.claude/project/stacks/` matching the PROFILE
+1. `shared/project/PROFILE.md`
+2. `shared/project/CLAUDE.md` (if present)
+3. `shared/project/overrides/<this-skill-name>.md` (if present)
+4. All files in `shared/project/guidelines/`
+5. Stack files in `shared/project/stacks/` matching the PROFILE
 
 Missing optional files are expected — continue without them. `PROFILE.md` is required; if absent, abort with "Run `/bootstrap-project` first."

@@ -30,12 +30,12 @@ case "$file" in
   .azure-pipelines/*|*/.azure-pipelines/*|azure-pipelines.yml|.github/workflows/*|*/.github/workflows/*|.gitlab-ci.yml|Jenkinsfile)
     block "CI/pipeline configuration. Infra edits require a human author."
     ;;
-  # Master skills (project overrides go in .claude/project/)
-  .claude/skills/*|*/.claude/skills/*|.claude/CLAUDE.md|*/.claude/CLAUDE.md|.claude/settings.json|.claude/mcp.json)
+  # Master skills (project overrides go in shared/project/)
+  shared/skills/*|*/shared/skills/*|.github/skills/*|*/.github/skills/*|.claude/CLAUDE.md|*/.claude/CLAUDE.md|.claude/settings.json|.claude/mcp.json)
     block "Master skills and global .claude/ config are read-only. Customize via .claude/project/."
     ;;
   # Scope-enforce rules themselves
-  .claude/agents/scope-map.json|*/.claude/agents/scope-map.json)
+  .claude/agents/scope-map.json|*/.claude/agents/scope-map.json|shared/agents/scope-map.json|*/shared/agents/scope-map.json)
     block "scope-map.json is protected; a subagent cannot rewrite its own scope."
     ;;
 esac

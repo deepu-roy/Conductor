@@ -37,7 +37,7 @@ Deliver a working SDLC pipeline where Claude Code — guided by composable, proj
 | Tech Lead | Ensure design is sound, slicing is safe, tech debt isn't introduced | Reviews design PR, sets merge policy |
 | Developer | Fix what Claude got wrong, own the eventual merge | Reviews feature PRs, pairs on slices |
 | Security reviewer | Catch auth/PII/injection mistakes before merge | Reads security subagent comments, final approve on sensitive PRs |
-| Platform owner | Keep the pipeline reliable and auditable | Owns `.claude/skills/`, watches traces |
+| Platform owner | Keep the pipeline reliable and auditable | Owns `shared/skills/`, watches traces |
 
 ## 4. Scope of work covered (the six stages)
 
@@ -56,7 +56,7 @@ Deliver a working SDLC pipeline where Claude Code — guided by composable, proj
 2. **ADO Service Hook** fires on the tag → pipeline `design-gen` starts.
 3. Pipeline runs Claude Code headless with `/requirements-analysis <id>`. The skill:
    - Reads the work item (via `az boards`).
-   - Loads `.claude/project/PROFILE.md`, policy overrides, guidelines, stacks.
+   - Loads `shared/project/PROFILE.md`, policy overrides, guidelines, stacks.
    - Generates `functional.md` (tech-agnostic), `technical.md` (stack-specific), `slices.md` (slicing + AC + risk).
    - Creates child ADO Task work items, one per slice, linked to the parent.
    - Opens a PR `[Design] WI-<id>: <title>` on a `design/WI-<id>` branch.
@@ -82,7 +82,7 @@ These are the places where humans are required or invited to intervene. Anything
 | 4 (impl) | Feature PR | Code correctness |
 | 6 | PR security comments | Accept / escalate / block |
 | 6 | PR tech-debt comments | Accept / defer / ignore |
-| PROFILE | `.claude/project/PROFILE.draft.md` | Confirm stack detection before first real run |
+| PROFILE | `shared/project/PROFILE.draft.md` | Confirm stack detection before first real run |
 
 ## 7. What minimal human effort looks like in practice
 
@@ -106,7 +106,7 @@ When the system is dropped into a new repo for the first time:
 
 1. A human runs `claude -p "/bootstrap-project"` once, locally.
 2. The skill scans manifests, framework signals, CI config, test frameworks, linter configs, and infra files. It does not write or commit.
-3. It generates `.claude/project/PROFILE.draft.md` with every claim citing the file and line that supports it.
+3. It generates `shared/project/PROFILE.draft.md` with every claim citing the file and line that supports it.
 4. The human reviews, corrects, and renames to `PROFILE.md`. This commit activates the project layer.
 5. Stock `guidelines/` and `stacks/` files are created as starter scaffolds — the human fills them in over the first week of use. All master skills gracefully handle missing optional files; none are required except `PROFILE.md`.
 
@@ -114,11 +114,11 @@ When the system is dropped into a new repo for the first time:
 
 Every master skill, before producing output, consults in this order:
 
-1. `.claude/project/PROFILE.md` — what stack are we in?
-2. `.claude/project/CLAUDE.md` — project policy.
-3. `.claude/project/overrides/<skill-name>.md` — skill-specific augmentation.
-4. `.claude/project/guidelines/*.md` — all files, loaded in alphabetical order.
-5. `.claude/project/stacks/<relevant-stack>.md` — only the stacks the PROFILE says apply.
+1. `shared/project/PROFILE.md` — what stack are we in?
+2. `shared/project/CLAUDE.md` — project policy.
+3. `shared/project/overrides/<skill-name>.md` — skill-specific augmentation.
+4. `shared/project/guidelines/*.md` — all files, loaded in alphabetical order.
+5. `shared/project/stacks/<relevant-stack>.md` — only the stacks the PROFILE says apply.
 
 On conflict, the higher-precedence source wins. The skill logs the conflict to the trace so the human can see what decision was made.
 
@@ -195,7 +195,7 @@ Merge back into `story/WI-<id>` is done by the orchestrator. If merge conflicts 
 ## 16. Open questions for the human owner
 
 1. Which pilot repo? Recommend a medium-complexity fullstack repo with a cooperative team and a tolerant branch policy.
-2. Who owns `.claude/skills/` (the master pack)? A platform team of at least two is strongly advised.
+2. Who owns `shared/skills/` (the master pack)? A platform team of at least two is strongly advised.
 3. Which ADO project area has an `ai:ready` tag defined? Create one if absent.
 4. Which Slack channel receives summaries? Recommend a single dedicated channel; don't spread.
 5. Where does the trace archive live? Minimum: Azure Blob with 90-day retention.
@@ -206,7 +206,7 @@ To implement, Claude Code needs:
 
 - This document (`FUNCTIONAL_DESIGN.md`) for the "why and what".
 - `TECHNICAL_DESIGN.md` for the "how".
-- The starter repo (provided alongside) containing `.claude/skills/`, `.claude/agents/`, `.claude/hooks/`, `.claude/scripts/`, `.claude/project/`, `.azure-pipelines/`.
+- The starter repo (provided alongside) containing `shared/skills/`, `.claude/agents/`, `.claude/hooks/`, `.claude/scripts/`, `shared/project/`, `.azure-pipelines/`.
 - Access to an ADO organization with a non-production pilot project.
 - An Anthropic API key stored as `ANTHROPIC_API_KEY` secret in the pipeline library.
 - An ADO PAT with work item + code + build scopes stored as `ADO_PAT`.

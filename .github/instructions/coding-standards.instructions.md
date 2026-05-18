@@ -4,7 +4,7 @@ applyTo: "**/*.{ts,tsx,js,jsx,cs,py,go,rs,java}"
 
 # Coding standards
 
-Follow the project-specific coding standards defined in `.github/project/guidelines/coding-standards.md`.
+Follow the project-specific coding standards defined in `shared/project/guidelines/coding-standards.md`.
 
 Key rules (see that file for full details):
 - Function size soft limit: 50 lines. Hard limit: 100 lines.

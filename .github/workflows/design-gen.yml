@@ -59,7 +59,7 @@ jobs:
             project="${{ vars.ADO_PROJECT }}"
 
       - name: Make scripts executable
-        run: chmod +x .github/scripts/*.sh .github/hooks/*.sh
+        run: chmod +x .github/hooks/*.sh shared/scripts/*.sh
 
       - name: Configure git identity
         run: |

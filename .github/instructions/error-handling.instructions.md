@@ -4,7 +4,7 @@ applyTo: "**/*.{ts,tsx,js,jsx,cs,py,go,rs,java}"
 
 # Error handling
 
-Follow the project-specific error handling rules in `.github/project/guidelines/error-handling.md`.
+Follow the project-specific error handling rules in `shared/project/guidelines/error-handling.md`.
 
 Key rules:
 - No empty catch blocks. No broad `except:` in Python. No swallowed errors.

@@ -53,7 +53,7 @@ jobs:
           ADO_PAT: $(ADO_PAT)
 
       - bash: |
-          chmod +x .claude/hooks/*.sh .claude/scripts/*.sh
+          chmod +x shared/scripts/*.sh
         displayName: 'Make hooks and scripts executable'
 
       - task: ClaudeCodeBaseTask@1
@@ -64,7 +64,7 @@ jobs:
           outputFormat: 'stream-json'
           maxTurns: 30
           model: $(CLAUDE_MODEL)
-          allowedTools: 'Read,Write,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(.claude/scripts/*)'
+          allowedTools: 'Read,Write,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(shared/scripts/*)'
           extraArgs: '--dangerously-skip-permissions'
         env:
           CLAUDE_RUN_ID: '$(Build.BuildId)'

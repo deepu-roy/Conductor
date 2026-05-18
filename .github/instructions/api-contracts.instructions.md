@@ -4,7 +4,7 @@ applyTo: "contracts/**,apps/api/**,apps/server/**,apps/web/src/api/**"
 
 # API contracts
 
-Follow the project-specific API contract rules in `.github/project/guidelines/api-contracts.md`.
+Follow the project-specific API contract rules in `shared/project/guidelines/api-contracts.md`.
 
 Key rules:
 - Contract files are the single source of truth. Implement to them, don't deviate.

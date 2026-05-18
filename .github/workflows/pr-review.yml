@@ -64,7 +64,7 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}" || true
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}" || true
-          chmod +x .github/scripts/*.sh .github/hooks/*.sh
+          chmod +x shared/scripts/*.sh
           npm install -g @github/copilot
 
       - name: Run ${{ matrix.label }}

@@ -30,7 +30,7 @@ jobs:
           az devops configure --defaults \
             organization="${{ vars.ADO_ORG_URL }}" \
             project="${{ vars.ADO_PROJECT }}"
-          chmod +x .github/scripts/*.sh
+          chmod +x shared/scripts/*.sh
 
       - name: Close linked work items
         run: |
@@ -43,7 +43,7 @@ jobs:
           commit_url="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
           for wi in $wis; do
             echo "Closing WI-$wi"
-            .github/scripts/ado-wi-update.sh "$wi" \
+            shared/scripts/ado-wi-update.sh "$wi" \
               --state "Closed" \
               --discussion "Merged to main: $commit_url" || \
               echo "::warning::Failed to update WI-$wi"
@@ -55,4 +55,4 @@ jobs:
           wis=$(echo "$msg" | grep -oE 'WI-[0-9]+' | sort -u | tr '\n' ' ')
           [[ -z "$wis" ]] && exit 0
           short_sha=$(echo "${{ github.sha }}" | cut -c1-8)
-          .github/scripts/slack-notify.sh ":white_check_mark: Merged to main: $wis ($short_sha)" || true
+          shared/scripts/slack-notify.sh ":white_check_mark: Merged to main: $wis ($short_sha)" || true

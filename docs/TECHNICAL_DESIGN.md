@@ -185,7 +185,7 @@
 | Trigger | Human: `claude -p "/bootstrap-project"` |
 | Invocation | `disable-model-invocation: true` (humans only) |
 | Tools | Read, Write, Glob, Grep, Bash(git:*), Bash(ls:*), Bash(cat:*), Bash(find:*) |
-| Produces | `.claude/project/PROFILE.draft.md` + skeleton `guidelines/`, `stacks/`, `overrides/` placeholders |
+| Produces | `shared/project/PROFILE.draft.md` + skeleton `guidelines/`, `stacks/`, `overrides/` placeholders |
 | Must not | Commit, push, edit master skills, write `PROFILE.md` (only `.draft.md`) |
 
 Detection matrix:
@@ -312,17 +312,17 @@ Example `scope-map.json`:
 {
   "backend-dev": {
     "read_write": ["apps/api/**", "tests/api/**"],
-    "read_only":  ["contracts/**", ".claude/project/**"],
+    "read_only":  ["contracts/**", "shared/project/**"],
     "denied":     ["apps/web/**", ".azure-pipelines/**", "*.env", "*.pem"]
   },
   "frontend-dev": {
     "read_write": ["apps/web/**", "tests/web/**"],
-    "read_only":  ["contracts/**", ".claude/project/**"],
+    "read_only":  ["contracts/**", "shared/project/**"],
     "denied":     ["apps/api/**", ".azure-pipelines/**", "*.env", "*.pem"]
   },
   "contract-dev": {
     "read_write": ["contracts/**"],
-    "read_only":  ["docs/designs/**", ".claude/project/**"],
+    "read_only":  ["docs/designs/**", "shared/project/**"],
     "denied":     ["apps/**", ".azure-pipelines/**", "*.env", "*.pem"]
   }
 }
@@ -351,7 +351,7 @@ If `blockers` or `questions` is non-empty, orchestrator does not proceed — it 
 
 ### 6.1 block-sensitive-files.sh (PreToolUse, all subagents + main)
 
-Blocks: `*.env`, `*.pem`, `*.key`, `*secrets*`, `.azure-pipelines/*.yml`, `.github/workflows/*.yml`, `.claude/skills/*` (master skills are read-only from the model's perspective).
+Blocks: `*.env`, `*.pem`, `*.key`, `*secrets*`, `.azure-pipelines/*.yml`, `.github/workflows/*.yml`, `shared/skills/*` (master skills are read-only from the model's perspective).
 
 ```bash
 #!/usr/bin/env bash
@@ -364,8 +364,8 @@ case "$file" in
     echo "BLOCKED: $file is a secret file." >&2; exit 2 ;;
   */.azure-pipelines/*|*/.github/workflows/*)
     echo "BLOCKED: $file is pipeline config. Infra edits require human author." >&2; exit 2 ;;
-  */.claude/skills/*)
-    echo "BLOCKED: $file is a master skill. Customize via .claude/project/ instead." >&2; exit 2 ;;
+  */shared/skills/*)
+    echo "BLOCKED: $file is a master skill. Customize via shared/project/ instead." >&2; exit 2 ;;
 esac
 exit 0
 ```
@@ -376,7 +376,7 @@ See 5.1. Uses `jq` + glob matching (bash `extglob` or `find` fallback).
 
 ### 6.3 format-after-edit.sh (PostToolUse on Edit|Write)
 
-Runs project-configured formatter. Reads `.claude/project/PROFILE.md` for the command (e.g. `pnpm prettier --write`, `dotnet format`). Silent on success; logs on failure; never fails the overall turn.
+Runs project-configured formatter. Reads `shared/project/PROFILE.md` for the command (e.g. `pnpm prettier --write`, `dotnet format`). Silent on success; logs on failure; never fails the overall turn.
 
 ### 6.4 trace-decisions.sh (PostToolUse, every tool)
 
@@ -534,7 +534,7 @@ Adding a new stack (e.g. Python backend):
 
 Adding a new review dimension (e.g. performance review):
 
-1. New master skill `.claude/skills/performance-review/SKILL.md`.
+1. New master skill `shared/skills/performance-review/SKILL.md`.
 2. New subagent `.claude/agents/performance-auditor.md`.
 3. Add to `pr-review.yml` matrix.
 

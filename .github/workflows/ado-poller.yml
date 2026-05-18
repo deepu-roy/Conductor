@@ -34,7 +34,7 @@ jobs:
           az devops configure --defaults \
             organization="${{ vars.ADO_ORG_URL }}" \
             project="${{ vars.ADO_PROJECT }}"
-          chmod +x .github/scripts/*.sh
+          chmod +x shared/scripts/*.sh
 
       - name: Query work items tagged ai:ready
         id: query
@@ -61,7 +61,7 @@ jobs:
       - name: Notify Slack — nothing to process
         if: steps.query.outputs.ids == ''
         run: |
-          .github/scripts/slack-notify.sh ":zzz: No work items tagged *ai:ready* pending to process. Nothing dispatched. I'll check again in an hour."
+          shared/scripts/slack-notify.sh ":zzz: No work items tagged *ai:ready* pending to process. Nothing dispatched. I'll check again in an hour."
 
       - name: Dispatch and mark each work item
         if: steps.query.outputs.ids != ''
@@ -97,10 +97,10 @@ jobs:
 
           # Slack summary
           if [[ -n "${dispatched:-}" ]]; then
-            .github/scripts/slack-notify.sh ":rocket: Dispatched $dispatched for requirement analysis: I'll inform you once they're completed."
+            shared/scripts/slack-notify.sh ":rocket: Dispatched $dispatched for requirement analysis: I'll inform you once they're completed."
           fi
           if [[ -n "${failed:-}" ]]; then
-            .github/scripts/slack-notify.sh ":warning: *Failed* to dispatch:$failed for requirement analysis — check the workflow run for details."
+            shared/scripts/slack-notify.sh ":warning: *Failed* to dispatch:$failed for requirement analysis — check the workflow run for details."
           fi
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -9,7 +9,7 @@ This file is the equivalent of `.github/copilot-instructions.md` for GitHub Copi
 - Never touch protected files: pipeline YAML, secrets, master skills. Hooks enforce this.
 - Never approve or merge PRs. Post comments only. Humans approve.
 - Every claim of "done" needs evidence: tests run, linter clean, type-check passed.
-- Project overrides win. On conflict between this file and `.github/project/`, follow the project layer and log the conflict.
+- Project overrides win. On conflict between this file and `shared/project/`, follow the project layer and log the conflict.
 
 ## Tool preferences
 
@@ -26,11 +26,11 @@ This file is the equivalent of `.github/copilot-instructions.md` for GitHub Copi
 
 Every skill and agent loads in this order:
 
-1. `.github/project/PROFILE.md` — required; abort if missing
-2. `.github/project/copilot-instructions.md` (if present) — project policy
-3. `.github/project/overrides/<this-skill-name>.md` (if present)
-4. All files in `.github/project/guidelines/`
-5. Stack files in `.github/project/stacks/` matching the PROFILE
+1. `shared/project/PROFILE.md` — required; abort if missing
+2. `shared/project/CLAUDE.md` (if present) — project policy
+3. `shared/project/overrides/<this-skill-name>.md` (if present)
+4. All files in `shared/project/guidelines/`
+5. Stack files in `shared/project/stacks/` matching the PROFILE
 
 Missing optional files are expected. `PROFILE.md` is required.
 
@@ -38,7 +38,7 @@ Missing optional files are expected. `PROFILE.md` is required.
 
 - No empty catch blocks. No broad `except:`. No swallowed errors.
 - Log with context (what was attempted, inputs — never secrets).
-- Project guidelines override for idioms — see `.github/project/guidelines/error-handling.md`.
+- Project guidelines override for idioms — see `shared/project/guidelines/error-handling.md`.
 
 ## Comments in generated code
 
