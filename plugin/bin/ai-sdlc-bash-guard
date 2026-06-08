@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# ai-sdlc-bash-guard — blocks dangerous shell operations
+# Called by hooks/hooks.json PreToolUse(Bash)
+set -euo pipefail
+
+command_str="${1:-}"
+
+if [[ -z "$command_str" ]]; then
+  exit 0
+fi
+
+# Blocked patterns
+if [[ "$command_str" == *"--force"* && "$command_str" == *"git push"* ]]; then
+  echo "BLOCKED: git push --force is not allowed. Use standard push."
+  exit 1
+fi
+
+if [[ "$command_str" == *"--no-verify"* && "$command_str" == *"git commit"* ]]; then
+  echo "BLOCKED: git commit --no-verify is not allowed. Hooks must run."
+  exit 1
+fi
+
+if [[ "$command_str" == *"rm -rf /"* ]]; then
+  echo "BLOCKED: Destructive rm -rf / detected."
+  exit 1
+fi
+
+if [[ "$command_str" == *"git reset --hard"* ]]; then
+  echo "BLOCKED: git reset --hard is not allowed without explicit human approval."
+  exit 1
+fi
+
+exit 0

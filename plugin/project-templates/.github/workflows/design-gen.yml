@@ -1,0 +1,92 @@
+# Workflow: design-gen
+# Trigger: manually via workflow_dispatch with a work item ID,
+#          or via repository_dispatch from an ADO Service Hook.
+# Role: Run /requirements-analysis skill → design PR.
+
+name: Design Generation
+
+on:
+  workflow_dispatch:
+    inputs:
+      work_item_id:
+        description: "ADO Work Item ID tagged ai:ready"
+        required: true
+        type: string
+  repository_dispatch:
+    types: [ado-workitem-ai-ready]
+
+env:
+  ADO_PAT: ${{ secrets.ADO_PAT }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  generate-design:
+    name: Generate design from work item
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve work item ID
+        id: wi
+        run: |
+          if [[ -n "${{ inputs.work_item_id }}" ]]; then
+            echo "id=${{ inputs.work_item_id }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "id=${{ github.event.client_payload.work_item_id }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq
+          sudo curl -sSLo /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          az extension add --name azure-devops --yes --only-show-errors
+
+      - name: Azure DevOps CLI login
+        run: |
+          echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
+          az devops configure --defaults \
+            organization="${{ vars.ADO_ORG_URL }}" \
+            project="${{ vars.ADO_PROJECT }}"
+
+      - name: Make scripts executable
+        run: chmod +x .github/hooks/*.sh shared/scripts/*.sh
+
+      - name: Configure git identity
+        run: |
+          git config user.email "ai-sdlc[bot]@users.noreply.github.com"
+          git config user.name "ai-sdlc[bot]"
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Run requirements-analysis
+        run: |
+          copilot \
+            --model claude-sonnet-4.6 \
+            --allow-all \
+            --no-ask-user \
+            --add-dir "${{ github.workspace }}" \
+            --prompt="/requirements-analysis ${{ steps.wi.outputs.id }}" \
+            2>&1 | tee copilot-output.log
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_TOKEN }}
+          CLAUDE_RUN_ID: ${{ github.run_id }}
+
+      - name: Archive trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-trace-${{ steps.wi.outputs.id }}
+          path: .github/trace/
+          retention-days: 90
+          if-no-files-found: ignore

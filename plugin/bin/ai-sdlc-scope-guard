@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# ai-sdlc-scope-guard — blocks writes to protected paths
+# Called by hooks/hooks.json PostToolUse(Write|Edit)
+set -euo pipefail
+
+file_path="${1:-}"
+
+if [[ -z "$file_path" ]]; then
+  exit 0
+fi
+
+# Protected path patterns
+protected_patterns=(
+  ".azure-pipelines/*"
+  ".github/workflows/*"
+  "*.env"
+  "*secrets*"
+  "*credentials*"
+  "plugin/skills/*"
+  "plugin/agents/*"
+)
+
+for pattern in "${protected_patterns[@]}"; do
+  if [[ "$file_path" == $pattern ]]; then
+    echo "BLOCKED: Write to protected path '$file_path' is not allowed."
+    echo "Protected patterns: pipeline YAML, secrets, env files, master skills."
+    exit 1
+  fi
+done
+
+exit 0

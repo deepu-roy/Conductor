@@ -1,13 +1,10 @@
 ---
-applyTo: "**/*.{ts,tsx,js,jsx,cs,py,go,rs,java}"
+applyTo: "plugin/bin/**"
 ---
 
-# Error handling
+# Error handling — plugin repo
 
-Follow the project-specific error handling rules in `.github/project/guidelines/error-handling.md`.
-
-Key rules:
-- No empty catch blocks. No broad `except:` in Python. No swallowed errors.
-- All errors log with structured properties — never string interpolation.
-- Stack traces never appear in error responses.
-- Retries only for idempotent operations.
+For shell scripts in `plugin/bin/`:
+- Always `set -euo pipefail`. Fail loudly — never silently ignore errors.
+- Print a clear message to stderr before exiting non-zero: `echo "ERROR: <what failed>" >&2`.
+- Use `exit 1` for user errors, `exit 2` for hook-block signals (per Claude Code convention).

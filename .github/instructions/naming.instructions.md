@@ -2,11 +2,10 @@
 applyTo: "**/*"
 ---
 
-# Naming conventions
+# Naming conventions — plugin repo
 
-Follow the project-specific naming rules in `.github/project/guidelines/naming.md`.
-
-Key rules:
-- Branch names: `design/WI-<id>` for design PRs, `story/WI-<id>` for features.
-- Commit first line: `WI-<id> S<slice-id>: <imperative summary>`.
-- Child task work items: `[S<n>] <slice title>`.
+- Branch names for this repo: `feature/<short-description>` or `fix/<short-description>`.
+- Commit messages: `<imperative summary>` (no WI prefix — this repo doesn't track ADO work items).
+- Plugin bin scripts: always `ai-sdlc-<kebab-name>` (no extension).
+- Skill directories: match the skill slug used in `plugin.json`.
+- Template files in `plugin/project-templates/`: mirror the path they will occupy in a user repo.

@@ -1,0 +1,68 @@
+# Pipeline: post-merge
+# Trigger: Any PR merged into main.
+# Role: Update ADO work items to Closed, notify Slack. Pure bash, no LLM.
+
+trigger:
+  branches:
+    include: [main]
+
+pr: none
+
+variables:
+  - group: ai-sdlc-secrets
+
+jobs:
+  - job: post_merge
+    displayName: 'Post-merge cleanup'
+    pool: { vmImage: 'ubuntu-latest' }
+    timeoutInMinutes: 10
+    steps:
+      - checkout: self
+        fetchDepth: 5
+
+      - bash: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq
+          az extension add --name azure-devops --yes --only-show-errors
+          echo "$(ADO_PAT)" | az devops login --organization "$(System.CollectionUri)"
+          az devops configure --defaults \
+            organization="$(System.CollectionUri)" \
+            project="$(System.TeamProject)"
+        displayName: 'Tooling + login'
+        env:
+          ADO_PAT: $(ADO_PAT)
+
+      - bash: chmod +x shared/scripts/*.sh
+        displayName: 'Scripts executable'
+
+      - bash: |
+          set -euo pipefail
+          # Extract WI-<id> references from the merge commit message.
+          msg=$(git log -1 --pretty=%B)
+          wis=$(echo "$msg" | grep -oE 'WI-[0-9]+' | sort -u | sed 's/WI-//')
+          if [[ -z "$wis" ]]; then
+            echo "No work item references in merge commit; nothing to do."
+            exit 0
+          fi
+
+          merge_url="$(System.CollectionUri)$(System.TeamProject)/_git/$(Build.Repository.Name)/commit/$(Build.SourceVersion)"
+
+          for wi in $wis; do
+            echo "Closing WI-$wi"
+            shared/scripts/ado-wi-update.sh "$wi" \
+              --state "Closed" \
+              --discussion "Merged to main in $merge_url" \
+              >/dev/null || echo "##vso[task.logissue type=warning]Failed to update WI-$wi"
+          done
+        displayName: 'Close linked work items'
+
+      - bash: |
+          set -euo pipefail
+          msg=$(git log -1 --pretty=%B)
+          wis=$(echo "$msg" | grep -oE 'WI-[0-9]+' | sort -u | tr '\n' ' ')
+          [[ -z "$wis" ]] && exit 0
+          shared/scripts/slack-notify.sh ":white_check_mark: Merged to main: $wis ($(Build.SourceVersion:0:8))"
+        displayName: 'Slack notify'
+        env:
+          SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)

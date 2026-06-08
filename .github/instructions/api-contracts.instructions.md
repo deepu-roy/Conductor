@@ -1,14 +1,10 @@
 ---
-applyTo: "contracts/**,apps/api/**,apps/server/**,apps/web/src/api/**"
+applyTo: "plugin/.claude-plugin/plugin.json,marketplace.json"
 ---
 
-# API contracts
+# Plugin manifest rules
 
-Follow the project-specific API contract rules in `.github/project/guidelines/api-contracts.md`.
-
-Key rules:
-- Contract files are the single source of truth. Implement to them, don't deviate.
-- Generated client code (from codegen) must NEVER be hand-edited. Regenerate.
-- Breaking changes require a new version path or GraphQL deprecation marker.
-- All endpoints authenticated by default. Public endpoints explicitly listed.
-- PII fields catalogued in api-contracts.md — security-review references this.
+- `plugin/.claude-plugin/plugin.json` is the single source of truth for plugin metadata.
+- `marketplace.json` at repo root must stay in sync with `plugin.json` version and capabilities.
+- Bump `version` in both files on every release (semver).
+- Do not add capabilities to `plugin.json` without a corresponding implementation in `plugin/skills/`, `plugin/agents/`, or `plugin/bin/`.

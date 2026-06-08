@@ -1,0 +1,20 @@
+{
+  "$schema": "https://cdn.claude.ai/schemas/marketplace.json",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "ai-sdlc",
+      "description": "AI-assisted SDLC pipeline — requirements analysis, technical slicing, implementation orchestration, PR review, security auditing, and story verification. Works with Azure DevOps and GitHub.",
+      "version": "1.0.0",
+      "source": "./plugin",
+      "keywords": ["sdlc", "pipeline", "code-review", "security", "azure-devops", "github", "orchestration", "work-items"],
+      "category": "productivity",
+      "capabilities": {
+        "skills": 10,
+        "agents": 6,
+        "hooks": 2,
+        "bin": 11
+      }
+    }
+  ]
+}

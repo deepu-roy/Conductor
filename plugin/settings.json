@@ -1,0 +1,24 @@
+{
+    "plugins": {
+        "ai-sdlc": {
+            "enabled": true
+        }
+    },
+    "permissions": {
+        "allow": [
+            "Bash(ai-sdlc-*)",
+            "Bash(git:*)",
+            "Bash(gh:*)",
+            "Bash(az:*)",
+            "Bash(curl:*)",
+            "Bash(jq:*)",
+            "Bash(yq:*)"
+        ],
+        "deny": [
+            "Bash(rm -rf /)",
+            "Bash(git push --force*)",
+            "Bash(git commit --no-verify*)",
+            "Bash(git reset --hard*)"
+        ]
+    }
+}
