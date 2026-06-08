@@ -1,0 +1,30 @@
+{
+  "hooks": [
+    {
+      "event": "PostToolUse",
+      "matcher": {
+        "tool": "Write|Edit"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/bin/ai-sdlc-scope-guard \"$FILE_PATH\"",
+          "description": "Prevent writes to protected paths (pipeline YAML, secrets, master skills)"
+        }
+      ]
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": {
+        "tool": "Bash"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/bin/ai-sdlc-bash-guard \"$COMMAND\"",
+          "description": "Block dangerous operations: git push --force, git commit --no-verify, rm -rf /"
+        }
+      ]
+    }
+  ]
+}

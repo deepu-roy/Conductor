@@ -1,4 +1,0 @@
-{
-  "_comment": "Intentionally empty. This project is CLI-first. Add MCP servers only when a stable CLI does not exist for the task.",
-  "mcpServers": {}
-}
