@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Conductor — GitHub Copilot Flow</title>
+<title>Conductor — Flow &amp; Setup</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
 
@@ -114,25 +114,42 @@
   .diff-box .row { display: flex; gap: 0.5rem; margin: 0.3rem 0; align-items: flex-start; }
   .diff-box .label { color: var(--text-muted); min-width: 120px; flex-shrink: 0; font-size: 0.82rem; }
   .diff-box .val { color: var(--text); font-size: 0.85rem; }
+
+  .tabs {
+    display: flex; gap: 0.5rem; margin: 1.5rem 0 1rem; border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: none; border: none; color: var(--text-muted); font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem; font-weight: 500; padding: 0.7rem 1.2rem; cursor: pointer;
+    border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent3); border-bottom-color: var(--accent3); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
 </style>
 </head>
 <body>
 
-<h1>Conductor — GitHub Copilot</h1>
-<p class="subtitle">End-to-end flow diagram and implementer setup guide</p>
+<h1>Conductor</h1>
+<p class="subtitle">End-to-end flow diagram and implementer setup guide — one plugin, either AI tool</p>
+
+<div class="callout">
+  <strong>One plugin, one flow.</strong> Conductor is a single installed plugin (<code>plugin/</code> in this repo). GitHub Copilot and Claude Code both load the exact same skills, agents, hooks, and <code>conductor-*</code> CLI tools from it — the pipeline behaves identically either way. The only differences are which CLI you install and which CI platform runs it, covered in the setup tabs below.
+</div>
 
 <!-- LEGEND -->
 <div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:var(--auto)"></div> Automated (Copilot)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--auto)"></div> Automated (AI agent)</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--human)"></div> Human action</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--gate)"></div> Review gate</div>
   <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div> Artifact produced</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Agent</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Subagent</div>
 </div>
 
 <!-- ==================== BLOCK DIAGRAM ==================== -->
 <h2><span class="num">1</span> System block diagram</h2>
-<p style="color:var(--text-muted);margin-bottom:1rem;">GitHub-native flow. ADO provides work items; GitHub Actions + Copilot CLI do the work.</p>
+<p style="color:var(--text-muted);margin-bottom:1rem;">ADO provides work items and the human gates; a CI pipeline runs the installed Conductor plugin headlessly, whichever AI tool you chose at setup.</p>
 
 <div class="diagram-container">
 <svg viewBox="0 0 980 640" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
@@ -162,23 +179,23 @@
   <text x="110" y="92" text-anchor="middle" fill="#d29922" font-size="11" font-weight="500">PM writes WI</text>
   <text x="110" y="106" text-anchor="middle" fill="#d29922" font-size="10">tags ai:ready</text>
 
-  <!-- GitHub Actions column -->
+  <!-- CI + plugin column -->
   <rect x="230" y="20" width="500" height="600" rx="6" fill="none" stroke="#30363d" stroke-width="1.5" stroke-dasharray="6 3"/>
-  <text x="480" y="48" text-anchor="middle" fill="#8b949e" font-size="11" font-weight="600">GITHUB ACTIONS + COPILOT CLI (headless)</text>
+  <text x="480" y="48" text-anchor="middle" fill="#8b949e" font-size="11" font-weight="600">CI PIPELINE + CONDUCTOR PLUGIN (headless)</text>
 
-  <!-- design-gen workflow -->
+  <!-- design-gen -->
   <rect x="260" y="70" width="200" height="50" rx="6" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.2"/>
-  <text x="360" y="92" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="500">design-gen workflow</text>
-  <text x="360" y="106" text-anchor="middle" fill="#8b949e" font-size="9">copilot --prompt /requirements-analysis</text>
+  <text x="360" y="92" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="500">design-gen pipeline</text>
+  <text x="360" y="106" text-anchor="middle" fill="#8b949e" font-size="9">runs /requirements-analysis</text>
 
   <!-- Arrow WI → workflow -->
   <line x1="185" y1="95" x2="260" y2="95" stroke="#d29922" stroke-width="1.5" marker-end="url(#a2h)"/>
-  <text x="222" y="88" text-anchor="middle" fill="#8b949e" font-size="8">dispatch</text>
+  <text x="222" y="88" text-anchor="middle" fill="#8b949e" font-size="8">trigger</text>
 
   <!-- Skills -->
   <rect x="260" y="140" width="200" height="70" rx="6" fill="#bc8cff18" stroke="#bc8cff" stroke-width="1"/>
-  <text x="360" y="160" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="500">Skills loaded (shared spec):</text>
-  <text x="360" y="176" text-anchor="middle" fill="#bc8cff" font-size="9">.github/skills/ = .claude/skills/</text>
+  <text x="360" y="160" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="500">Conductor skills load:</text>
+  <text x="360" y="176" text-anchor="middle" fill="#bc8cff" font-size="9">plugin/skills/ (installed once)</text>
   <text x="360" y="192" text-anchor="middle" fill="#8b949e" font-size="9">+ PROFILE + guidelines + stacks</text>
   <line x1="360" y1="120" x2="360" y2="140" stroke="#bc8cff" stroke-width="1" marker-end="url(#a2)"/>
 
@@ -200,35 +217,35 @@
   <line x1="635" y1="265" x2="760" y2="265" stroke="#d29922" stroke-width="1" marker-end="url(#a2h)"/>
   <text x="855" y="300" text-anchor="middle" fill="#d29922" font-size="9" font-style="italic">merge = approval</text>
 
-  <!-- implement-story: four separate jobs -->
+  <!-- implement-story -->
   <rect x="260" y="320" width="200" height="50" rx="6" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.2"/>
-  <text x="360" y="342" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="500">implement-story workflow</text>
-  <text x="360" y="356" text-anchor="middle" fill="#8b949e" font-size="9">4 jobs: derive → contract → BE||FE → merge</text>
+  <text x="360" y="342" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="500">implement-story pipeline</text>
+  <text x="360" y="356" text-anchor="middle" fill="#8b949e" font-size="9">derive → contract → BE || FE → merge</text>
   <line x1="605" y1="290" x2="360" y2="320" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#a2)"/>
 
-  <!-- Agents as separate GHA jobs -->
+  <!-- Subagents -->
   <rect x="260" y="390" width="110" height="44" rx="6" fill="#bc8cff18" stroke="#bc8cff" stroke-width="1"/>
   <text x="315" y="409" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="500">contract-dev</text>
-  <text x="315" y="424" text-anchor="middle" fill="#8b949e" font-size="8">Job 2 (sequential)</text>
+  <text x="315" y="424" text-anchor="middle" fill="#8b949e" font-size="8">runs first, alone</text>
 
   <rect x="390" y="390" width="110" height="44" rx="6" fill="#bc8cff18" stroke="#bc8cff" stroke-width="1"/>
   <text x="445" y="409" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="500">backend-dev</text>
-  <text x="445" y="424" text-anchor="middle" fill="#8b949e" font-size="8">Job 3a (parallel)</text>
+  <text x="445" y="424" text-anchor="middle" fill="#8b949e" font-size="8">parallel</text>
 
   <rect x="520" y="390" width="110" height="44" rx="6" fill="#bc8cff18" stroke="#bc8cff" stroke-width="1"/>
   <text x="575" y="409" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="500">frontend-dev</text>
-  <text x="575" y="424" text-anchor="middle" fill="#8b949e" font-size="8">Job 3b (parallel)</text>
+  <text x="575" y="424" text-anchor="middle" fill="#8b949e" font-size="8">parallel</text>
 
   <line x1="315" y1="370" x2="315" y2="390" stroke="#bc8cff" stroke-width="1"/>
   <line x1="400" y1="370" x2="445" y2="390" stroke="#bc8cff" stroke-width="1"/>
   <line x1="460" y1="370" x2="575" y2="390" stroke="#bc8cff" stroke-width="1"/>
 
-  <!-- merge-and-pr job -->
+  <!-- merged feature PR -->
   <rect x="380" y="455" width="160" height="40" rx="6" fill="#3fb95018" stroke="#3fb950" stroke-width="1"/>
   <text x="460" y="479" text-anchor="middle" fill="#3fb950" font-size="11">Feature PR opened</text>
   <line x1="445" y1="434" x2="460" y2="455" stroke="#3fb950" stroke-width="1" marker-end="url(#a2g)"/>
 
-  <!-- pr-review workflow -->
+  <!-- pr-review -->
   <rect x="260" y="520" width="110" height="40" rx="6" fill="#bc8cff18" stroke="#bc8cff" stroke-width="1"/>
   <text x="315" y="544" text-anchor="middle" fill="#bc8cff" font-size="9">code-reviewer</text>
 
@@ -238,7 +255,7 @@
   <rect x="520" y="520" width="110" height="40" rx="6" fill="#bc8cff18" stroke="#bc8cff" stroke-width="1"/>
   <text x="575" y="544" text-anchor="middle" fill="#bc8cff" font-size="9">tech-debt</text>
 
-  <text x="660" y="544" fill="#8b949e" font-size="8">matrix: 3 parallel</text>
+  <text x="660" y="544" fill="#8b949e" font-size="8">3 parallel subagents</text>
 
   <line x1="460" y1="495" x2="315" y2="520" stroke="#bc8cff" stroke-width="1"/>
   <line x1="460" y1="495" x2="445" y2="520" stroke="#bc8cff" stroke-width="1"/>
@@ -261,25 +278,12 @@
   <text x="110" y="492" text-anchor="middle" fill="#58a6ff" font-size="10">WI → Closed</text>
 
   <rect x="35" y="540" width="150" height="35" rx="6" fill="#d2992218" stroke="#d29922" stroke-width="1"/>
-  <text x="110" y="562" text-anchor="middle" fill="#d29922" font-size="10">Slack notifications</text>
+  <text x="110" y="562" text-anchor="middle" fill="#d29922" font-size="10">Notifications</text>
 </svg>
 </div>
 
-<!-- ==================== KEY DIFFERENCES ==================== -->
-<h2><span class="num">2</span> Key differences from Claude Code</h2>
-
-<div class="diff-box">
-  <div class="title">Architectural differences</div>
-  <div class="row"><span class="label">Orchestration</span><span class="val">Claude Code uses a single session with Task tool for subagent forking. Copilot uses <strong>separate GitHub Actions jobs</strong> — contract first, then BE + FE as parallel jobs, then a merge job. More YAML, same outcome, fully deterministic.</span></div>
-  <div class="row"><span class="label">Agent delegation</span><span class="val">Copilot supports <strong>intent-based auto-delegation</strong> in IDE: the runtime reads agent descriptions and matches user intent. In CI, we use explicit <code>--agent &lt;name&gt;</code> for determinism.</span></div>
-  <div class="row"><span class="label">Hook format</span><span class="val"><code>.github/hooks/hooks.json</code> (JSON config) vs <code>.claude/settings.json</code>. Copilot hooks deny via <code>{"permissionDecision":"deny"}</code> on stdout, not exit code 2. A <strong>normalize shim</strong> bridges both formats so hook scripts are shared.</span></div>
-  <div class="row"><span class="label">Instructions</span><span class="val">Copilot adds <code>applyTo:</code> glob scoping — instructions auto-activate per file type. Claude loads everything unconditionally.</span></div>
-  <div class="row"><span class="label">Skills</span><span class="val"><strong>Identical.</strong> Same open standard SKILL.md files. Both runtimes read <code>.github/skills/</code> and <code>.claude/skills/</code>.</span></div>
-  <div class="row"><span class="label">Project layer</span><span class="val"><strong>Shared.</strong> Both read from <code>.claude/project/</code> — no duplication.</span></div>
-</div>
-
 <!-- ==================== SEQUENCE DIAGRAM ==================== -->
-<h2><span class="num">3</span> Sequence diagram — GitHub Actions flow</h2>
+<h2><span class="num">2</span> Sequence diagram</h2>
 
 <div class="diagram-container">
 <svg viewBox="0 0 980 750" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
@@ -293,10 +297,10 @@
   <text x="220" y="30" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="600">ADO</text>
   <line x1="220" y1="40" x2="220" y2="730" stroke="#58a6ff40" stroke-width="1" stroke-dasharray="4 4"/>
 
-  <text x="380" y="30" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="600">GH Actions</text>
+  <text x="380" y="30" text-anchor="middle" fill="#58a6ff" font-size="11" font-weight="600">CI Pipeline</text>
   <line x1="380" y1="40" x2="380" y2="730" stroke="#58a6ff40" stroke-width="1" stroke-dasharray="4 4"/>
 
-  <text x="560" y="30" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="600">Copilot CLI</text>
+  <text x="560" y="30" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="600">AI CLI + Conductor</text>
   <line x1="560" y1="40" x2="560" y2="730" stroke="#bc8cff40" stroke-width="1" stroke-dasharray="4 4"/>
 
   <text x="730" y="30" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="600">Git</text>
@@ -312,11 +316,11 @@
 
   <!-- Dispatch -->
   <line x1="220" y1="95" x2="380" y2="95" stroke="#58a6ff" stroke-width="1.2" marker-end="url(#a2)"/>
-  <text x="300" y="89" text-anchor="middle" fill="#8b949e" font-size="8">repository_dispatch</text>
+  <text x="300" y="89" text-anchor="middle" fill="#8b949e" font-size="8">trigger design-gen</text>
 
-  <!-- Copilot runs -->
+  <!-- CLI runs -->
   <line x1="380" y1="115" x2="560" y2="115" stroke="#58a6ff" stroke-width="1.2" marker-end="url(#a2)"/>
-  <text x="470" y="109" text-anchor="middle" fill="#8b949e" font-size="8">copilot --prompt /requirements-analysis</text>
+  <text x="470" y="109" text-anchor="middle" fill="#8b949e" font-size="8">/requirements-analysis</text>
 
   <!-- Reads WI -->
   <line x1="560" y1="140" x2="220" y2="140" stroke="#bc8cff" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#a2)"/>
@@ -329,7 +333,7 @@
 
   <!-- Opens PR -->
   <line x1="560" y1="215" x2="730" y2="215" stroke="#3fb950" stroke-width="1.2" marker-end="url(#a2g)"/>
-  <text x="645" y="209" text-anchor="middle" fill="#8b949e" font-size="8">gh pr create (design)</text>
+  <text x="645" y="209" text-anchor="middle" fill="#8b949e" font-size="8">create design PR</text>
 
   <line x1="730" y1="235" x2="890" y2="235" stroke="#3fb950" stroke-width="1" marker-end="url(#a2g)"/>
 
@@ -342,20 +346,20 @@
 
   <!-- Merge triggers implement -->
   <line x1="870" y1="319" x2="380" y2="350" stroke="#58a6ff" stroke-width="1.2" marker-end="url(#a2)"/>
-  <text x="625" y="338" text-anchor="middle" fill="#8b949e" font-size="8">push to main → implement-story</text>
+  <text x="625" y="338" text-anchor="middle" fill="#8b949e" font-size="8">merge → implement-story</text>
 
-  <!-- Job: contract -->
+  <!-- contract stage -->
   <rect x="350" y="360" width="60" height="20" rx="4" fill="#58a6ff30"/>
-  <text x="380" y="374" text-anchor="middle" fill="#58a6ff" font-size="8">Job 2</text>
+  <text x="380" y="374" text-anchor="middle" fill="#58a6ff" font-size="8">Stage 1</text>
   <line x1="410" y1="370" x2="560" y2="370" stroke="#58a6ff" stroke-width="1" marker-end="url(#a2)"/>
   <text x="485" y="364" text-anchor="middle" fill="#8b949e" font-size="8">--agent contract-dev</text>
 
   <rect x="525" y="380" width="70" height="24" rx="4" fill="#bc8cff18" stroke="#bc8cff" stroke-width="0.8"/>
   <text x="560" y="396" text-anchor="middle" fill="#bc8cff" font-size="8">contract-dev</text>
 
-  <!-- Jobs: parallel -->
+  <!-- parallel stages -->
   <rect x="350" y="420" width="60" height="20" rx="4" fill="#58a6ff30"/>
-  <text x="380" y="434" text-anchor="middle" fill="#58a6ff" font-size="8">Job 3</text>
+  <text x="380" y="434" text-anchor="middle" fill="#58a6ff" font-size="8">Stage 2</text>
 
   <rect x="510" y="420" width="50" height="24" rx="4" fill="#bc8cff18" stroke="#bc8cff" stroke-width="0.8"/>
   <text x="535" y="436" text-anchor="middle" fill="#bc8cff" font-size="7">BE</text>
@@ -363,21 +367,21 @@
   <rect x="575" y="420" width="50" height="24" rx="4" fill="#bc8cff18" stroke="#bc8cff" stroke-width="0.8"/>
   <text x="600" y="436" text-anchor="middle" fill="#bc8cff" font-size="7">FE</text>
 
-  <text x="645" y="436" fill="#8b949e" font-size="7" font-style="italic">parallel jobs</text>
+  <text x="645" y="436" fill="#8b949e" font-size="7" font-style="italic">parallel</text>
 
   <line x1="410" y1="430" x2="510" y2="430" stroke="#58a6ff" stroke-width="1" marker-end="url(#a2)"/>
 
-  <!-- Job 4: merge-and-pr -->
+  <!-- merge-and-pr stage -->
   <rect x="350" y="465" width="60" height="20" rx="4" fill="#58a6ff30"/>
-  <text x="380" y="479" text-anchor="middle" fill="#58a6ff" font-size="8">Job 4</text>
+  <text x="380" y="479" text-anchor="middle" fill="#58a6ff" font-size="8">Stage 3</text>
   <text x="445" y="479" fill="#8b949e" font-size="8">merge branches</text>
 
   <line x1="470" y1="475" x2="730" y2="495" stroke="#3fb950" stroke-width="1.2" marker-end="url(#a2g)"/>
-  <text x="600" y="487" text-anchor="middle" fill="#8b949e" font-size="8">gh pr create (feature)</text>
+  <text x="600" y="487" text-anchor="middle" fill="#8b949e" font-size="8">create feature PR</text>
 
   <!-- PR review -->
   <line x1="730" y1="520" x2="380" y2="520" stroke="#58a6ff" stroke-width="1" marker-end="url(#a2)"/>
-  <text x="555" y="514" text-anchor="middle" fill="#8b949e" font-size="8">PR opened → pr-review workflow</text>
+  <text x="555" y="514" text-anchor="middle" fill="#8b949e" font-size="8">PR opened → pr-review pipeline</text>
 
   <line x1="380" y1="540" x2="560" y2="540" stroke="#bc8cff" stroke-width="1" marker-end="url(#a2)"/>
 
@@ -390,7 +394,7 @@
   <rect x="610" y="550" width="45" height="24" rx="4" fill="#bc8cff18" stroke="#bc8cff" stroke-width="0.8"/>
   <text x="632" y="566" text-anchor="middle" fill="#bc8cff" font-size="7">debt</text>
 
-  <text x="680" y="566" fill="#8b949e" font-size="7">matrix</text>
+  <text x="680" y="566" fill="#8b949e" font-size="7">3 parallel</text>
 
   <line x1="580" y1="585" x2="730" y2="600" stroke="#3fb950" stroke-width="1" marker-end="url(#a2g)"/>
   <text x="655" y="592" text-anchor="middle" fill="#8b949e" font-size="8">PR comments</text>
@@ -405,102 +409,217 @@
   <text x="890" y="686" text-anchor="middle" fill="#d29922" font-size="8">merges</text>
 
   <line x1="870" y1="694" x2="220" y2="710" stroke="#58a6ff" stroke-width="1" marker-end="url(#a2)"/>
-  <text x="545" y="706" text-anchor="middle" fill="#8b949e" font-size="8">post-merge → WI Closed + Slack</text>
+  <text x="545" y="706" text-anchor="middle" fill="#8b949e" font-size="8">post-merge → WI Closed + notify</text>
 </svg>
 </div>
 
 <hr class="section-divider">
 
 <!-- ==================== SETUP STEPS ==================== -->
-<h2><span class="num">4</span> Implementer setup — GitHub Copilot</h2>
+<h2><span class="num">3</span> Implementer setup</h2>
+<p style="color:var(--text-muted);margin-bottom:0.5rem;">Same plugin, same skills. Pick the tool your team already uses — the pipeline behaves identically either way.</p>
 
-<h3>Prerequisites</h3>
-<div class="callout">
-  <strong>You need:</strong> A GitHub repo, Copilot CLI installed (<code>npm i -g @github/copilot-cli</code>), an ADO project with a PAT, a Slack incoming webhook URL, and repository admin access.
+<div class="tabs">
+  <button class="tab-btn active" data-tab="copilot">GitHub Copilot (GitHub Actions)</button>
+  <button class="tab-btn" data-tab="claude">Claude Code (Azure Pipelines)</button>
 </div>
 
-<div class="steps">
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-content">
-      <div class="step-title">Copy the starter into your repo</div>
-      <div class="step-detail"><code>copy ai-sdlc-orchestrator &lt;your-repo&gt;</code><br>
-      This puts <code>.claude/</code> (shared layer), <code>.github/</code> (Copilot entrypoint), and <code>docs/</code> in place.</div>
+<!-- COPILOT TAB -->
+<div class="tab-panel active" id="tab-copilot">
+  <div class="callout">
+    <strong>You need:</strong> A GitHub repo, Copilot CLI (<code>npm install -g @github/copilot</code>), an ADO project with a PAT, a Slack incoming webhook URL, and repository admin access.
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Install the Conductor plugin</div>
+        <div class="step-detail"><code>copilot plugin install --from https://github.com/deepu-roy/Conductor</code><br>
+        This makes the skills, agents, hooks, and <code>conductor-*</code> CLI tools available — nothing is copied into your repo.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Run bootstrap</div>
+        <div class="step-detail"><code>copilot --prompt "/bootstrap-project"</code><br>
+        Scans the repo, generates <code>shared/project/PROFILE.draft.md</code> with cited evidence, and copies the CI templates into <code>.github/workflows/</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Review and activate the profile</div>
+        <div class="step-detail">Fix every <code>[NEEDS HUMAN INPUT]</code> entry, confirm stack detection, then <code>mv shared/project/PROFILE.draft.md shared/project/PROFILE.md</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Fill in guideline stubs</div>
+        <div class="step-detail">Edit <code>shared/project/guidelines/*.md</code> and <code>shared/project/overrides/</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Create GitHub repository secrets</div>
+        <div class="step-detail">Settings → Secrets and variables → Actions:<br>
+        <code>COPILOT_TOKEN</code>, <code>ADO_PAT</code>, <code>SLACK_WEBHOOK_URL</code>.<br>
+        Also set repository variables: <code>ADO_ORG_URL</code>, <code>ADO_PROJECT</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <div class="step-title">Enable the workflows</div>
+        <div class="step-detail">The five YAMLs in <code>.github/workflows/</code> activate on push: <code>ado-poller</code>, <code>design-gen</code>, <code>implement-story</code>, <code>pr-review</code>, <code>post-merge</code>. Check the Actions tab to confirm all five appear.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-content">
+        <div class="step-title">No native ADO webhook needed</div>
+        <div class="step-detail">GitHub Actions can't receive ADO service hooks directly, so <code>ado-poller</code> polls ADO hourly for work items tagged <code>ai:ready</code>, dispatches <code>design-gen</code> for each, then flips the tag to <code>ai:processing</code>. Run it manually via <code>workflow_dispatch</code> to test without waiting.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-content">
+        <div class="step-title">Set branch protection rules</div>
+        <div class="step-detail">Settings → Rules → Rulesets: require 1 human reviewer on <code>main</code> and <code>design/**</code>, require status checks to pass, prevent direct pushes.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-content">
+        <div class="step-title">Commit and push</div>
+        <div class="step-detail"><code>git add shared/project/ .github/workflows/ && git commit -m "Adopt Conductor" && git push</code></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">10</div>
+      <div class="step-content">
+        <div class="step-title">Tag your first work item</div>
+        <div class="step-detail">Write a clear description in an ADO Feature, tag it <code>ai:ready</code>, run <code>ado-poller</code> manually the first time, and watch the design PR appear.</div>
+      </div>
     </div>
   </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-content">
-      <div class="step-title">Run bootstrap (via Copilot or Claude Code — either works)</div>
-      <div class="step-detail"><code>copilot --prompt "/bootstrap-project"</code><br>
-      Or: <code>claude -p "/bootstrap-project"</code><br>
-      Both read the same SKILL.md. Output: <code>.claude/project/PROFILE.draft.md</code>.</div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-content">
-      <div class="step-title">Review and activate the profile</div>
-      <div class="step-detail">Fix <code>[NEEDS HUMAN INPUT]</code> entries. Rename to <code>PROFILE.md</code>.</div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">4</div>
-    <div class="step-content">
-      <div class="step-title">Fill in guideline stubs</div>
-      <div class="step-detail">Edit <code>.claude/project/guidelines/*.md</code> and <code>.claude/project/overrides/</code>. Both Copilot and Claude Code read these.</div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">5</div>
-    <div class="step-content">
-      <div class="step-title">Create GitHub repository secrets</div>
-      <div class="step-detail">Settings → Secrets and variables → Actions:<br>
-      <code>COPILOT_TOKEN</code>, <code>ADO_PAT</code>, <code>SLACK_WEBHOOK_URL</code>.<br>
-      Also set repository variables: <code>ADO_ORG_URL</code>, <code>ADO_PROJECT</code>.</div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">6</div>
-    <div class="step-content">
-      <div class="step-title">Enable the workflows</div>
-      <div class="step-detail">The four YAMLs in <code>.github/workflows/</code> activate on push. Check Actions tab to confirm all four appear. <code>design-gen</code> also supports <code>workflow_dispatch</code> for manual testing.</div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">7</div>
-    <div class="step-content">
-      <div class="step-title">Wire the ADO → GitHub dispatch</div>
-      <div class="step-detail">ADO Project Settings → Service Hooks → Generic webhook → target your GitHub repo's <code>repository_dispatch</code> endpoint. Event type: <code>ado-workitem-ai-ready</code>. Map <code>work_item_id</code> in the payload.<br>
-      Alternatively: use a small Azure Function or Logic App to bridge ADO webhooks to GitHub's <code>/dispatches</code> API.</div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">8</div>
-    <div class="step-content">
-      <div class="step-title">Set branch protection rules</div>
-      <div class="step-detail">Settings → Rules → Rulesets: require 1 human reviewer on <code>main</code> and <code>design/**</code>, require status checks to pass, prevent direct pushes.</div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">9</div>
-    <div class="step-content">
-      <div class="step-title">Commit and push</div>
-      <div class="step-detail"><code>git add .claude/ .github/ docs/ && git commit -m "Adopt Conductor" && git push</code></div>
-    </div>
-  </div>
-  <div class="step">
-    <div class="step-num">10</div>
-    <div class="step-content">
-      <div class="step-title">Test manually first</div>
-      <div class="step-detail">Actions → design-gen → Run workflow → enter a work item ID. Watch the run. If it produces a design PR, the wiring works. Then enable the ADO dispatch for automatic triggering.</div>
-    </div>
+
+  <div class="callout warn">
+    <strong>Copilot CLI is newer than Claude Code.</strong> Expect some rough edges in headless mode — especially around agent delegation and auth in CI. Pin the CLI version in your workflows once you find one that works.
   </div>
 </div>
 
-<div class="callout warn">
-  <strong>Copilot CLI is newer than Claude Code.</strong> Expect some rough edges in headless mode — especially around <code>--agent</code> flag handling and auth in CI. Pin the CLI version in your workflows once you find one that works.
+<!-- CLAUDE TAB -->
+<div class="tab-panel" id="tab-claude">
+  <div class="callout">
+    <strong>You need:</strong> An Anthropic API key, an ADO project with a PAT (Work Items RW, Code RW, Build RW), a Slack incoming webhook URL, and the <code>claude</code> CLI installed locally for bootstrap.
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Install the Conductor plugin</div>
+        <div class="step-detail"><code>claude plugin add --from https://github.com/deepu-roy/Conductor</code><br>
+        This makes the skills, agents, hooks, and <code>conductor-*</code> CLI tools available — nothing is copied into your repo.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Run bootstrap</div>
+        <div class="step-detail"><code>cd &lt;your-repo&gt; && claude -p "/bootstrap-project"</code><br>
+        Scans the repo, generates <code>shared/project/PROFILE.draft.md</code> with cited evidence, and copies the CI templates into <code>.azure-pipelines/</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Review and activate the profile</div>
+        <div class="step-detail">Fix every <code>[NEEDS HUMAN INPUT]</code> entry, confirm stack detection, then <code>mv shared/project/PROFILE.draft.md shared/project/PROFILE.md</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Fill in guideline stubs</div>
+        <div class="step-detail">Edit files in <code>shared/project/guidelines/</code> — coding standards, error handling, naming, API contracts. Add project-specific overrides in <code>shared/project/overrides/</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Create ADO variable group</div>
+        <div class="step-detail">Project Settings → Library → New variable group <code>conductor-secrets</code>:<br>
+        <code>ANTHROPIC_API_KEY</code> (secret), <code>ADO_PAT</code> (secret), <code>SLACK_WEBHOOK_URL</code> (secret).</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <div class="step-title">Create four pipelines</div>
+        <div class="step-detail">Each pointing at its YAML in <code>.azure-pipelines/</code>: <code>design-gen</code>, <code>implement-story</code>, <code>pr-review</code>, <code>post-merge</code>.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-content">
+        <div class="step-title">Wire the native ADO Service Hook</div>
+        <div class="step-detail">Project Settings → Service Hooks → Work Item Updated → Filter: tags contain <code>ai:ready</code> → Action: trigger the <code>design-gen</code> pipeline, mapping <code>workItemId</code>. Azure Pipelines lives in the same ADO org, so no polling is needed here.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-content">
+        <div class="step-title">Set branch policies</div>
+        <div class="step-detail">On <code>main</code> and <code>design/**</code>: require 1 human reviewer, require PR build to pass, prevent direct pushes.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-content">
+        <div class="step-title">Commit and push</div>
+        <div class="step-detail"><code>git add shared/project/ .azure-pipelines/ && git commit -m "Adopt Conductor" && git push</code></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">10</div>
+      <div class="step-content">
+        <div class="step-title">Tag your first work item</div>
+        <div class="step-detail">Write a clear description in an ADO Feature, tag it <code>ai:ready</code>, and watch the design PR appear within a few minutes.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <strong>First-run expectation:</strong> The design PR will likely need 1–2 revision comments from the tech lead. The slicing will probably be too fine. That's normal — correct in the PR, and the system learns from the overrides you add.
+  </div>
+</div>
+
+<!-- ==================== KEY DIFFERENCES ==================== -->
+<h2><span class="num">4</span> What actually differs between the two</h2>
+
+<div class="diff-box">
+  <div class="title">Everything else is identical</div>
+  <div class="row"><span class="label">Skills &amp; agents</span><span class="val">Same <code>plugin/skills/</code> and <code>plugin/agents/</code> — one open-standard definition, read by both runtimes.</span></div>
+  <div class="row"><span class="label">Project layer</span><span class="val">Both read <code>shared/project/</code> — no duplication, no drift.</span></div>
+  <div class="row"><span class="label">CLI tools &amp; hooks</span><span class="val">Same <code>conductor-*</code> bin tools and the same two hooks (<code>conductor-scope-guard</code>, <code>conductor-bash-guard</code>).</span></div>
+  <div class="row"><span class="label">Trigger mechanism</span><span class="val">GitHub Actions polls ADO hourly (<code>ado-poller</code>) since it can't receive ADO service hooks directly. Azure Pipelines is triggered natively by an ADO Service Hook — one pipeline fewer, no polling delay.</span></div>
+  <div class="row"><span class="label">Orchestration</span><span class="val">Both fork <code>contract-dev</code> → <code>backend-dev</code> ‖ <code>frontend-dev</code> as separate CI jobs/stages for determinism, not as in-session subagent calls.</span></div>
 </div>
 
 </body>
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+</script>
 </html>
