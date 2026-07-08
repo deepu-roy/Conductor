@@ -64,7 +64,7 @@ jobs:
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}" || true
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}" || true
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
 
       - name: Run ${{ matrix.label }}
         run: |

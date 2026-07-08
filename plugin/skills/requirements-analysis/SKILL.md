@@ -2,7 +2,7 @@
 name: requirements-analysis
 description: Convert an ADO work item tagged ai:ready into functional.md + technical.md + slices.md, create child ADO Tasks, open a design PR, and notify Slack. Use when invoked by the design-gen pipeline with a work item ID.
 argument-hint: "<work-item-id>"
-allowed-tools: Read, Write, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(az:*), Bash(curl:*), Bash(jq:*), Bash(yq:*), Bash(ai-sdlc-*)
+allowed-tools: Read, Write, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(az:*), Bash(curl:*), Bash(jq:*), Bash(yq:*), Bash(conductor-*)
 ---
 
 # Requirements analysis → design + slicing
@@ -33,7 +33,7 @@ On any conflict, higher-precedence source wins: overrides > project CLAUDE.md > 
 ### Step 2 — Fetch the work item
 
 ```bash
-ai-sdlc-wi-show $1 > /tmp/wi-$1.json
+conductor-wi-show $1 > /tmp/wi-$1.json
 ```
 
 Extract: title, description, acceptance criteria, tags, linked parents, linked children (if any).
@@ -74,13 +74,13 @@ Structure:
 After writing, for **each open question** in §6, execute this command (outside the document — do not write the command into functional.md):
 
 ```bash
-ai-sdlc-wi-update $1 --discussion "Open question: <Question> → <who to ask>"
+conductor-wi-update $1 --discussion "Open question: <Question> → <who to ask>"
 ```
 
 Then run:
 
 ```bash
-ai-sdlc-check-tech-agnostic docs/designs/WI-$1/functional.md
+conductor-check-tech-agnostic docs/designs/WI-$1/functional.md
 ```
 
 If it exits non-zero, revise the document.
@@ -164,7 +164,7 @@ For each slice:
 
 ```bash
 # extract single slice YAML to a temp file, then:
-ai-sdlc-wi-create-slice $1 /tmp/slice-<id>.yaml
+conductor-wi-create-slice $1 /tmp/slice-<id>.yaml
 ```
 
 Attach the full slice YAML as the work item description.
@@ -206,7 +206,7 @@ EOF
 ### Step 6 — Slack notification
 
 ```bash
-ai-sdlc-notify "Design ready for review: WI-$1 — <PR URL>"
+conductor-notify "Design ready for review: WI-$1 — <PR URL>"
 ```
 
 ### Step 7 — Handoff ritual

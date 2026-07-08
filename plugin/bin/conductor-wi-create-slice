@@ -35,7 +35,7 @@ created=$(az boards work-item create \
   --type "Task" \
   --title "[$slice_id] $title" \
   --description "$description" \
-  --fields "System.Tags=ai-sdlc;layer-$layer" \
+  --fields "System.Tags=conductor;layer-$layer" \
   --output json)
 
 wi_id=$(echo "$created" | jq -r '.id')

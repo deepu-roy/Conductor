@@ -35,7 +35,7 @@ jobs:
             organization="${{ vars.ADO_ORG_URL }}" \
             project="${{ vars.ADO_PROJECT }}"
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
 
       - name: Query work items tagged ai:ready
         id: query
@@ -62,7 +62,7 @@ jobs:
       - name: Notify Slack — nothing to process
         if: steps.query.outputs.ids == ''
         run: |
-          ai-sdlc-notify ":zzz: No work items tagged *ai:ready* pending to process. Nothing dispatched. I'll check again in an hour."
+          conductor-notify ":zzz: No work items tagged *ai:ready* pending to process. Nothing dispatched. I'll check again in an hour."
 
       - name: Dispatch and mark each work item
         if: steps.query.outputs.ids != ''
@@ -98,10 +98,10 @@ jobs:
 
           # Slack summary
           if [[ -n "${dispatched:-}" ]]; then
-            ai-sdlc-notify ":rocket: Dispatched $dispatched for requirement analysis: I'll inform you once they're completed."
+            conductor-notify ":rocket: Dispatched $dispatched for requirement analysis: I'll inform you once they're completed."
           fi
           if [[ -n "${failed:-}" ]]; then
-            ai-sdlc-notify ":warning: *Failed* to dispatch:$failed for requirement analysis — check the workflow run for details."
+            conductor-notify ":warning: *Failed* to dispatch:$failed for requirement analysis — check the workflow run for details."
           fi
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

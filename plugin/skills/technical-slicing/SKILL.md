@@ -2,7 +2,7 @@
 name: technical-slicing
 description: Break a technical design into implementable slices. Usually chained from requirements-analysis; can be called standalone to re-slice an existing design.
 argument-hint: "<work-item-id>"
-allowed-tools: Read, Write, Glob, Grep, Bash(jq:*), Bash(yq:*), Bash(ai-sdlc-*)
+allowed-tools: Read, Write, Glob, Grep, Bash(jq:*), Bash(yq:*), Bash(conductor-*)
 ---
 
 # Technical slicing

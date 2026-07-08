@@ -60,13 +60,13 @@ jobs:
 
       - name: Configure git identity
         run: |
-          git config user.email "ai-sdlc[bot]@users.noreply.github.com"
-          git config user.name "ai-sdlc[bot]"
+          git config user.email "conductor[bot]@users.noreply.github.com"
+          git config user.name "conductor[bot]"
 
-      - name: Install Copilot CLI and ai-sdlc plugin
+      - name: Install Copilot CLI and Conductor plugin
         run: |
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
 
       - name: Run requirements-analysis
         run: |

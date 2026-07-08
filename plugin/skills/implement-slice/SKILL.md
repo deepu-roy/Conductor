@@ -2,7 +2,7 @@
 name: implement-slice
 description: Implement a single slice. Used when a story has only one slice, or when a subagent is operating on a single slice within the orchestrator. Writes code, writes tests, runs tests, commits on a sub-branch.
 argument-hint: "<slice-id>"
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), Bash(jq:*), Bash(yq:*), Bash(ai-sdlc-*)
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), Bash(jq:*), Bash(yq:*), Bash(conductor-*)
 ---
 
 # Implement one slice

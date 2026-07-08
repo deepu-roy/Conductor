@@ -1,6 +1,6 @@
-# Technical Design — AI-Assisted SDLC
+# Technical Design — Conductor
 
-**Project codename:** AI-SDLC
+**Project codename:** Conductor
 **Version:** 3.0 (unified `plugin/` architecture)
 **Companion:** `FUNCTIONAL_DESIGN.md`
 
@@ -30,9 +30,9 @@
 
 ## 1. Overview
 
-AI-SDLC is a pipeline that turns Azure DevOps work items into implemented, reviewed pull requests with minimal human intervention. Work items tagged `ai:ready` flow through design generation, parallel subagent implementation, and multi-dimensional PR review — driven by **GitHub Copilot (CLI or VS Code)** or **Claude Code**, both loading the exact same plugin.
+Conductor is a pipeline that turns Azure DevOps work items into implemented, reviewed pull requests with minimal human intervention. Work items tagged `ai:ready` flow through design generation, parallel subagent implementation, and multi-dimensional PR review — driven by **GitHub Copilot (CLI or VS Code)** or **Claude Code**, both loading the exact same plugin.
 
-The key architectural principle is **a single installable plugin, distributed once, used identically by every tool.** All skills, agent definitions, CLI tools, and hooks live in `plugin/` in this repository (`ai-sdlc-orchestrator`) and are consumed by target projects as an installed plugin — never copied into the target repo. Only project-owned configuration (`shared/project/`) and CI pipeline definitions (`.azure-pipelines/`, `.github/workflows/`) are ever written into a consuming project, and those are generated once by `bootstrap-project` from the templates in `plugin/project-templates/`.
+The key architectural principle is **a single installable plugin, distributed once, used identically by every tool.** All skills, agent definitions, CLI tools, and hooks live in `plugin/` in this repository (`Conductor`) and are consumed by target projects as an installed plugin — never copied into the target repo. Only project-owned configuration (`shared/project/`) and CI pipeline definitions (`.azure-pipelines/`, `.github/workflows/`) are ever written into a consuming project, and those are generated once by `bootstrap-project` from the templates in `plugin/project-templates/`.
 
 ```
                          ┌──────────────────────────────┐
@@ -46,7 +46,7 @@ The key architectural principle is **a single installable plugin, distributed on
                          └──────────────┬────────────────┘
                                         │
                     ┌───────────────────▼─────────────────────┐
-                    │     ai-sdlc-orchestrator (this repo)      │
+                    │     Conductor (this repo)      │
                     │                                          │
                     │  marketplace.json  ── plugin manifest    │
                     │  plugin/                                 │
@@ -82,7 +82,7 @@ The key architectural principle is **a single installable plugin, distributed on
 ## 2. Repository layout
 
 ```
-ai-sdlc-orchestrator/                        ← THIS repo — the plugin source
+Conductor/                        ← THIS repo — the plugin source
 │
 ├── marketplace.json                         ← plugin registry manifest (name, version, capability counts)
 │
@@ -116,17 +116,17 @@ ai-sdlc-orchestrator/                        ← THIS repo — the plugin source
 │   │   └── tech-debt-auditor.md
 │   │
 │   ├── bin/                                 ← 11 CLI tools, auto-added to PATH when the plugin is installed
-│   │   ├── ai-sdlc-wi-show
-│   │   ├── ai-sdlc-wi-update
-│   │   ├── ai-sdlc-wi-create-slice
-│   │   ├── ai-sdlc-create-pr                ← config-driven: GitHub | Azure Repos
-│   │   ├── ai-sdlc-pr-comment
-│   │   ├── ai-sdlc-notify                   ← config-driven: Slack | Teams | webhook
-│   │   ├── ai-sdlc-check-compile            ← reads PROFILE.md gates.compile
-│   │   ├── ai-sdlc-check-startup            ← reads PROFILE.md gates.startup
-│   │   ├── ai-sdlc-check-tech-agnostic
-│   │   ├── ai-sdlc-scope-guard              ← hook: blocks writes to protected paths
-│   │   └── ai-sdlc-bash-guard               ← hook: blocks destructive shell commands
+│   │   ├── conductor-wi-show
+│   │   ├── conductor-wi-update
+│   │   ├── conductor-wi-create-slice
+│   │   ├── conductor-create-pr                ← config-driven: GitHub | Azure Repos
+│   │   ├── conductor-pr-comment
+│   │   ├── conductor-notify                   ← config-driven: Slack | Teams | webhook
+│   │   ├── conductor-check-compile            ← reads PROFILE.md gates.compile
+│   │   ├── conductor-check-startup            ← reads PROFILE.md gates.startup
+│   │   ├── conductor-check-tech-agnostic
+│   │   ├── conductor-scope-guard              ← hook: blocks writes to protected paths
+│   │   └── conductor-bash-guard               ← hook: blocks destructive shell commands
 │   │
 │   ├── hooks/
 │   │   └── hooks.json                       ← 2 hooks: PostToolUse(Write|Edit), PreToolUse(Bash)
@@ -203,7 +203,7 @@ The plugin itself is **never** copied into a consuming repo. It is installed onc
 
 ## 3. PROFILE.md — the config backbone
 
-`shared/project/PROFILE.md` is the single configuration file that controls how every skill and bin tool behaves. It is created by `/bootstrap-project` as `PROFILE.draft.md` and activated by renaming it to `PROFILE.md`. Until `PROFILE.md` exists, all AI-SDLC skills abort with the message: `PROFILE.md not found. Run /bootstrap-project first.`
+`shared/project/PROFILE.md` is the single configuration file that controls how every skill and bin tool behaves. It is created by `/bootstrap-project` as `PROFILE.draft.md` and activated by renaming it to `PROFILE.md`. Until `PROFILE.md` exists, all Conductor skills abort with the message: `PROFILE.md not found. Run /bootstrap-project first.`
 
 ### 3.1 Complete annotated example
 
@@ -303,20 +303,20 @@ reviewers: []             # ADO reviewer login names for auto-assignment
 | `project.type` | enum | yes | One of: `frontend`, `backend`, `fullstack`, `infra`, `fullstack-monorepo` |
 | `project.repo_kind` | enum | yes | `single` or `monorepo` |
 | `orchestration.pipeline_tool` | enum | yes | `github-actions` or `azure-pipelines` |
-| `orchestration.repo_host` | enum | yes | `github` or `azure-repos` — drives `ai-sdlc-create-pr` |
+| `orchestration.repo_host` | enum | yes | `github` or `azure-repos` — drives `conductor-create-pr` |
 | `orchestration.work_items.source` | enum | yes | Always `ado` in current release |
 | `orchestration.work_items.org_url` | URL | yes | ADO organization URL |
 | `orchestration.work_items.project` | string | yes | ADO project name |
-| `orchestration.notifications.type` | enum | yes | `slack`, `teams`, or `webhook` — drives `ai-sdlc-notify` |
+| `orchestration.notifications.type` | enum | yes | `slack`, `teams`, or `webhook` — drives `conductor-notify` |
 | `orchestration.notifications.webhook_url` | URL | yes | Incoming webhook URL |
 | `orchestration.notifications.channel` | string | Slack only | Target channel, e.g. `#engineering` |
 | `stacks.*` | object | recommended | Detected stack; each field carries a `# source:` comment |
 | `gates.pre_commit` | shell command | recommended | Runs before commits during implementation |
 | `gates.pre_merge` | shell command | recommended | Runs before feature PR is opened |
-| `gates.compile.frontend` | shell command | optional | `ai-sdlc-check-compile` runs this; `n/a` to skip |
-| `gates.compile.backend` | shell command | optional | `ai-sdlc-check-compile` runs this; `n/a` to skip |
-| `gates.startup.frontend` | shell command | optional | `ai-sdlc-check-startup` starts the frontend process |
-| `gates.startup.backend` | shell command | optional | `ai-sdlc-check-startup` starts the backend process |
+| `gates.compile.frontend` | shell command | optional | `conductor-check-compile` runs this; `n/a` to skip |
+| `gates.compile.backend` | shell command | optional | `conductor-check-compile` runs this; `n/a` to skip |
+| `gates.startup.frontend` | shell command | optional | `conductor-check-startup` starts the frontend process |
+| `gates.startup.backend` | shell command | optional | `conductor-check-startup` starts the backend process |
 | `gates.healthcheck.frontend` | shell command | optional | HTTP check after startup wait |
 | `gates.healthcheck.backend` | shell command | optional | HTTP check after startup wait |
 | `gates.startup_wait_seconds` | int | optional | Default 15; seconds to wait after starting app |
@@ -361,7 +361,7 @@ If `PROFILE.md` is missing, execution stops. All other files are optional — mi
 
 ### 4.4 Tech-agnostic functional doc rule
 
-`functional.md` must not contain framework, protocol, or cloud-service names. `ai-sdlc-check-tech-agnostic` enforces a grep blocklist against the file and exits non-zero on any match. The blocked terms include: `OAuth`, `JWT`, `REST`, `GraphQL`, `gRPC`, `PostgreSQL`, `MySQL`, `Redis`, `MongoDB`, `React`, `Angular`, `Vue`, `Next`, `Svelte`, `Kubernetes`, `Docker`, `AWS`, `Lambda`, `S3`, `Cosmos`, `RabbitMQ`, `Kafka`, `Azure` (as cloud service name). These terms are permitted in `technical.md`.
+`functional.md` must not contain framework, protocol, or cloud-service names. `conductor-check-tech-agnostic` enforces a grep blocklist against the file and exits non-zero on any match. The blocked terms include: `OAuth`, `JWT`, `REST`, `GraphQL`, `gRPC`, `PostgreSQL`, `MySQL`, `Redis`, `MongoDB`, `React`, `Angular`, `Vue`, `Next`, `Svelte`, `Kubernetes`, `Docker`, `AWS`, `Lambda`, `S3`, `Cosmos`, `RabbitMQ`, `Kafka`, `Azure` (as cloud service name). These terms are permitted in `technical.md`.
 
 ---
 
@@ -373,7 +373,7 @@ Every agent has exactly one file: `plugin/agents/<name>.md`. It contains the com
 
 ### 5.2 scope-map.json
 
-`plugin/scope-map.json` defines per-subagent file boundaries. The `ai-sdlc-scope-guard` hook reads this file at runtime. Precedence: `denied` wins over `read_only` wins over `read_write`.
+`plugin/scope-map.json` defines per-subagent file boundaries. The `conductor-scope-guard` hook reads this file at runtime. Precedence: `denied` wins over `read_only` wins over `read_write`.
 
 ```json
 {
@@ -431,27 +431,27 @@ If `blockers` or `questions` is non-empty, the orchestrator does not merge — i
 
 ## 6. Bin tools and config-driven execution
 
-All CLI tools in `plugin/bin/` are prefixed `ai-sdlc-`, idempotent where possible, exit non-zero on failure, and log to stderr. They are added to `PATH` automatically once the plugin is installed, and may be called by skills, by pipeline YAML, or directly by developers.
+All CLI tools in `plugin/bin/` are prefixed `conductor-`, idempotent where possible, exit non-zero on failure, and log to stderr. They are added to `PATH` automatically once the plugin is installed, and may be called by skills, by pipeline YAML, or directly by developers.
 
 ### 6.1 Bin tool inventory
 
 | Command | Purpose |
 |---|---|
-| `ai-sdlc-wi-show <id>` | Print ADO work item JSON: `az boards work-item show --id <id>` |
-| `ai-sdlc-wi-update <id> --state <s> --discussion <text>` | Update work item state and append discussion comment |
-| `ai-sdlc-wi-create-slice <parent-id> <slice-yaml>` | Create a child Task work item from a slice YAML file |
-| `ai-sdlc-pr-comment <pr-id> <thread-status> <comment-file>` | Post a comment thread on a PR |
-| `ai-sdlc-check-compile [frontend\|backend\|both]` | Reads `gates.compile.<layer>` from PROFILE.md and runs it |
-| `ai-sdlc-check-startup [frontend\|backend\|both]` | Starts app, waits `startup_wait_seconds`, runs healthcheck, kills |
-| `ai-sdlc-check-tech-agnostic <file>` | Grep blocklist against a file; exits non-zero on any forbidden term |
-| `ai-sdlc-notify <message>` | Config-driven notification (see below) |
-| `ai-sdlc-create-pr --title <t> --body <b> --branch <br> [--base <base>]` | Config-driven PR creation (see below) |
-| `ai-sdlc-scope-guard <file>` | Hook: blocks writes to protected paths |
-| `ai-sdlc-bash-guard <command>` | Hook: blocks destructive shell commands |
+| `conductor-wi-show <id>` | Print ADO work item JSON: `az boards work-item show --id <id>` |
+| `conductor-wi-update <id> --state <s> --discussion <text>` | Update work item state and append discussion comment |
+| `conductor-wi-create-slice <parent-id> <slice-yaml>` | Create a child Task work item from a slice YAML file |
+| `conductor-pr-comment <pr-id> <thread-status> <comment-file>` | Post a comment thread on a PR |
+| `conductor-check-compile [frontend\|backend\|both]` | Reads `gates.compile.<layer>` from PROFILE.md and runs it |
+| `conductor-check-startup [frontend\|backend\|both]` | Starts app, waits `startup_wait_seconds`, runs healthcheck, kills |
+| `conductor-check-tech-agnostic <file>` | Grep blocklist against a file; exits non-zero on any forbidden term |
+| `conductor-notify <message>` | Config-driven notification (see below) |
+| `conductor-create-pr --title <t> --body <b> --branch <br> [--base <base>]` | Config-driven PR creation (see below) |
+| `conductor-scope-guard <file>` | Hook: blocks writes to protected paths |
+| `conductor-bash-guard <command>` | Hook: blocks destructive shell commands |
 
-### 6.2 ai-sdlc-notify — branching logic
+### 6.2 conductor-notify — branching logic
 
-`ai-sdlc-notify` reads `orchestration.notifications.type` and `orchestration.notifications.webhook_url` from `shared/project/PROFILE.md` using `yq`. If `PROFILE.md` is absent or the notification fields contain `[NEEDS HUMAN INPUT]`, the script exits 0 silently — a missing notification config is never a pipeline failure.
+`conductor-notify` reads `orchestration.notifications.type` and `orchestration.notifications.webhook_url` from `shared/project/PROFILE.md` using `yq`. If `PROFILE.md` is absent or the notification fields contain `[NEEDS HUMAN INPUT]`, the script exits 0 silently — a missing notification config is never a pipeline failure.
 
 When configured:
 - **`type: slack`** — constructs a JSON payload `{text, channel}` (channel included if the `channel` field is set). Posts to the webhook URL with `curl`.
@@ -460,9 +460,9 @@ When configured:
 
 All three variants use `curl -sS -X POST -H 'Content-type: application/json'` and write nothing to stdout on success; the caller sees a one-line confirmation message on stdout.
 
-### 6.3 ai-sdlc-create-pr — branching logic
+### 6.3 conductor-create-pr — branching logic
 
-`ai-sdlc-create-pr` reads `orchestration.repo_host` from PROFILE.md using `yq`. If PROFILE.md is absent, it defaults to `github`. The `--body` argument can be either literal text or `@path/to/file` (the `@` prefix triggers a file read).
+`conductor-create-pr` reads `orchestration.repo_host` from PROFILE.md using `yq`. If PROFILE.md is absent, it defaults to `github`. The `--body` argument can be either literal text or `@path/to/file` (the `@` prefix triggers a file read).
 
 - **`repo_host: github`** — calls `gh pr create --title ... --body ... --head ... --base ...`. Requires `gh` CLI authenticated (via `GH_TOKEN` env var in CI, or `gh auth login` locally).
 - **`repo_host: azure-repos`** — calls `az repos pr create --title ... --description ... --source-branch ... --target-branch ...`. Requires `az` CLI with the `azure-devops` extension and an active `az devops login` session.
@@ -482,7 +482,7 @@ The plugin ships two hooks in `plugin/hooks/hooks.json`, backed by two bin scrip
       "hooks": [
         {
           "type": "command",
-          "command": "${CLAUDE_PLUGIN_ROOT}/bin/ai-sdlc-scope-guard \"$FILE_PATH\"",
+          "command": "${CLAUDE_PLUGIN_ROOT}/bin/conductor-scope-guard \"$FILE_PATH\"",
           "description": "Prevent writes to protected paths (pipeline YAML, secrets, master skills)"
         }
       ]
@@ -493,7 +493,7 @@ The plugin ships two hooks in `plugin/hooks/hooks.json`, backed by two bin scrip
       "hooks": [
         {
           "type": "command",
-          "command": "${CLAUDE_PLUGIN_ROOT}/bin/ai-sdlc-bash-guard \"$COMMAND\"",
+          "command": "${CLAUDE_PLUGIN_ROOT}/bin/conductor-bash-guard \"$COMMAND\"",
           "description": "Block dangerous operations: git push --force, git commit --no-verify, rm -rf /"
         }
       ]
@@ -502,28 +502,28 @@ The plugin ships two hooks in `plugin/hooks/hooks.json`, backed by two bin scrip
 }
 ```
 
-### 7.1 ai-sdlc-scope-guard (PostToolUse, Write|Edit)
+### 7.1 conductor-scope-guard (PostToolUse, Write|Edit)
 
 Blocks writes to protected path patterns: pipeline configs (`.azure-pipelines/*`, `.github/workflows/*`), secrets (`*.env`, `*secrets*`, `*credentials*`), and master skill/agent content (`plugin/skills/*`, `plugin/agents/*`). On a match it prints `BLOCKED: Write to protected path '<file>' is not allowed.` and exits non-zero, which the calling tool surfaces to the model as the reason for the block.
 
-### 7.2 ai-sdlc-bash-guard (PreToolUse, Bash)
+### 7.2 conductor-bash-guard (PreToolUse, Bash)
 
 Blocks destructive shell invocations before they run: `git push --force` (and `--force-with-lease` variants), `git commit --no-verify`, and `rm -rf /`-style recursive deletes at filesystem roots.
 
 ### 7.3 Subagent scope enforcement
 
-Scope enforcement for subagents (`contract-dev`, `backend-dev`, `frontend-dev`, and the read-only reviewers) is layered on top of `ai-sdlc-scope-guard` by consulting `plugin/scope-map.json` for the calling subagent's declared `read_write` / `read_only` / `denied` globs, in that precedence order, before allowing a write.
+Scope enforcement for subagents (`contract-dev`, `backend-dev`, `frontend-dev`, and the read-only reviewers) is layered on top of `conductor-scope-guard` by consulting `plugin/scope-map.json` for the calling subagent's declared `read_write` / `read_only` / `denied` globs, in that precedence order, before allowing a write.
 
 ---
 
 ## 8. Pipeline stages — end to end
 
-The system has five pipeline stages. GitHub Actions workflow templates (`plugin/project-templates/.github/workflows/`) are the reference implementation; the Azure Pipelines templates (`plugin/project-templates/.azure-pipelines/`) implement the same logic using `ClaudeCodeBaseTask@1`. Both sets of templates are copied into the consuming repo by `bootstrap-project` and are then human-owned — the plugin's `ai-sdlc-scope-guard` hook refuses to let AI agents edit them afterward.
+The system has five pipeline stages. GitHub Actions workflow templates (`plugin/project-templates/.github/workflows/`) are the reference implementation; the Azure Pipelines templates (`plugin/project-templates/.azure-pipelines/`) implement the same logic using `ClaudeCodeBaseTask@1`. Both sets of templates are copied into the consuming repo by `bootstrap-project` and are then human-owned — the plugin's `conductor-scope-guard` hook refuses to let AI agents edit them afterward.
 
-Every pipeline job that invokes a skill or agent must first install the plugin so the `/skill-name` commands, agent definitions, and `ai-sdlc-*` bin tools are available:
+Every pipeline job that invokes a skill or agent must first install the plugin so the `/skill-name` commands, agent definitions, and `conductor-*` bin tools are available:
 
-- **GitHub Actions:** `npm install -g @github/copilot && copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator`
-- **Azure Pipelines:** `npm install -g @anthropic-ai/claude-code && claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator` (ahead of the `ClaudeCodeBaseTask@1` step)
+- **GitHub Actions:** `npm install -g @github/copilot && copilot plugin install --from https://github.com/deepu-roy/Conductor`
+- **Azure Pipelines:** `npm install -g @anthropic-ai/claude-code && claude plugin add --from https://github.com/deepu-roy/Conductor` (ahead of the `ClaudeCodeBaseTask@1` step)
 
 ### 8.1 Stage 0 — ADO polling (ado-poller.yml)
 
@@ -532,7 +532,7 @@ Runs every hour via cron (GitHub Actions) or fires from an ADO Service Hook (Azu
 1. Fires a `repository_dispatch` event (`ado-workitem-ai-ready`) with the work item ID in the payload.
 2. Tags the work item with `ai:processing` to prevent re-dispatch on the next poll.
 
-Notifications go through `ai-sdlc-notify` on both empty-queue and dispatched-items outcomes.
+Notifications go through `conductor-notify` on both empty-queue and dispatched-items outcomes.
 
 ### 8.2 Stage 1 — Design generation (design-gen.yml)
 
@@ -542,19 +542,19 @@ Triggered by `repository_dispatch` from the poller, or manually via `workflow_di
 1. Resolve work item ID (from dispatch payload or manual input)
 2. Install jq, yq, az devops extension
 3. az devops login with ADO_PAT
-4. Install the Copilot/Claude CLI and the ai-sdlc plugin
+4. Install the Copilot/Claude CLI and the Conductor plugin
 5. Run /requirements-analysis <id>
 6. Archive the run log as a build artifact (90-day retention)
 ```
 
 The skill procedure:
-- Reads the ADO work item via `ai-sdlc-wi-show`
+- Reads the ADO work item via `conductor-wi-show`
 - Loads the project layer (PROFILE → CLAUDE.md → overrides → guidelines → stacks)
 - Generates `docs/designs/WI-<id>/functional.md`, `technical.md`, and `slices.md`
-- Runs `ai-sdlc-check-tech-agnostic` on `functional.md`
-- Creates ADO child Task work items for each slice via `ai-sdlc-wi-create-slice`
-- Commits design docs, pushes, opens a design PR via `ai-sdlc-create-pr`
-- Notifies via `ai-sdlc-notify`
+- Runs `conductor-check-tech-agnostic` on `functional.md`
+- Creates ADO child Task work items for each slice via `conductor-wi-create-slice`
+- Commits design docs, pushes, opens a design PR via `conductor-create-pr`
+- Notifies via `conductor-notify`
 
 ### 8.3 Stage 2 — Story implementation (implement-story.yml)
 
@@ -588,7 +588,7 @@ Each job: resolves PR metadata, checks out at the PR head SHA, runs the agent wi
 
 ### 8.5 Stage 4 — Post-merge (post-merge.yml)
 
-Triggered on push to `master`. No AI invocation — pure bash, using `ai-sdlc-wi-update` and `ai-sdlc-notify`:
+Triggered on push to `master`. No AI invocation — pure bash, using `conductor-wi-update` and `conductor-notify`:
 
 1. Parses `WI-<id>` references from the merge commit message.
 2. Updates each referenced work item state to `Closed` with a link to the commit.
@@ -628,7 +628,7 @@ Infra slices (`layer: infra`) cause `implement-story` to abort and flag for huma
 
 ## 9. Windows developer setup
 
-CI pipelines run on `ubuntu-latest` and require no Windows-specific configuration. The challenge is local developer use, since `ai-sdlc-*` bin tools are bash scripts.
+CI pipelines run on `ubuntu-latest` and require no Windows-specific configuration. The challenge is local developer use, since `conductor-*` bin tools are bash scripts.
 
 ### 9.1 Option A — WSL2 (recommended)
 
@@ -651,7 +651,7 @@ az extension add --name azure-devops
 sudo apt-get install -y gh
 
 npm install -g @github/copilot   # or: npm install -g @anthropic-ai/claude-code
-copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+copilot plugin install --from https://github.com/deepu-roy/Conductor
 
 git clone git@github.com:org/repo.git ~/projects/repo
 cd ~/projects/repo
@@ -739,7 +739,7 @@ The `SKILL.md` must include the frontmatter block, the load-order preamble (PROF
 
 **Step 2 — No path changes needed for protection:**
 
-`ai-sdlc-scope-guard` already protects the `plugin/skills/*` pattern, so the new skill is automatically covered.
+`conductor-scope-guard` already protects the `plugin/skills/*` pattern, so the new skill is automatically covered.
 
 **Step 3 — No wrapper files needed:**
 
@@ -766,7 +766,7 @@ Bump `version` in `plugin/.claude-plugin/plugin.json` and `marketplace.json`, an
 
 ### 12.1 Adding a new notification type
 
-Edit `plugin/bin/ai-sdlc-notify`. Add a new `case` branch for the new type name:
+Edit `plugin/bin/conductor-notify`. Add a new `case` branch for the new type name:
 
 ```bash
 case "$notif_type" in
@@ -775,7 +775,7 @@ case "$notif_type" in
   webhook) # ... existing ...  ;;
   pagerduty)
     payload=$(jq -n --arg t "$msg" '{routing_key: $ROUTING_KEY, event_action: "trigger",
-      payload: {summary: $t, severity: "info", source: "ai-sdlc"}}')
+      payload: {summary: $t, severity: "info", source: "conductor"}}')
     curl -sS -X POST -H 'Content-Type: application/json' \
       --data "$payload" "https://events.pagerduty.com/v2/enqueue" >/dev/null
     echo "PagerDuty notification sent."
@@ -787,7 +787,7 @@ Update the PROFILE.md `orchestration.notifications.type` enum documentation in `
 
 ### 12.2 Adding a new repo host
 
-Edit `plugin/bin/ai-sdlc-create-pr`. Add a new `case` branch:
+Edit `plugin/bin/conductor-create-pr`. Add a new `case` branch:
 
 ```bash
 case "$repo_host" in
@@ -817,7 +817,7 @@ Also update the `PROFILE.draft.md` template so bootstrap can detect and set the 
 | Notification webhook (`SLACK_WEBHOOK_URL`) | Post to one channel | GitHub Actions secret / Pipeline variable group |
 | `GITHUB_TOKEN` | PR read, PR write comments | Auto-injected by Actions runner |
 
-Agents running in CI execute with only the granted token's permissions. Branch policies on `master` require at least one human approval — agents cannot merge. The `ai-sdlc-scope-guard` hook prevents writing pipeline YAML even if an adversarial prompt tries to do so.
+Agents running in CI execute with only the granted token's permissions. Branch policies on `master` require at least one human approval — agents cannot merge. The `conductor-scope-guard` hook prevents writing pipeline YAML even if an adversarial prompt tries to do so.
 
 ---
 
@@ -855,7 +855,7 @@ Double for complex stories, halve for simple ones. At 50 stories/week the bill i
 
 ## 16. Security considerations
 
-**Prompt injection surface:** Work item descriptions, PR descriptions, and file contents all flow into the model context. The hook layer is the primary defence: `ai-sdlc-scope-guard` prevents exfiltration via file write, and subagent scope enforcement (backed by `plugin/scope-map.json`) prevents lateral movement between layers.
+**Prompt injection surface:** Work item descriptions, PR descriptions, and file contents all flow into the model context. The hook layer is the primary defence: `conductor-scope-guard` prevents exfiltration via file write, and subagent scope enforcement (backed by `plugin/scope-map.json`) prevents lateral movement between layers.
 
 **Secret handling:** All secrets live in pipeline variable groups or GitHub Actions secrets, injected as environment variables. They are never written to files, never echoed in script output.
 
@@ -863,9 +863,9 @@ Double for complex stories, halve for simple ones. At 50 stories/week the bill i
 
 **Merge discipline:** Branch policies on `master` require human approval. Agents can only open PRs and post comments. They cannot approve or merge.
 
-**Master skill protection:** `ai-sdlc-scope-guard` blocks writes to `plugin/skills/**` and `plugin/agents/**`. Project customisation goes in `shared/project/` — never in the plugin itself.
+**Master skill protection:** `conductor-scope-guard` blocks writes to `plugin/skills/**` and `plugin/agents/**`. Project customisation goes in `shared/project/` — never in the plugin itself.
 
-**Bash guard:** `ai-sdlc-bash-guard` blocks `git push --force`, `git commit --no-verify`, and destructive `rm -rf` invocations before they execute.
+**Bash guard:** `conductor-bash-guard` blocks `git push --force`, `git commit --no-verify`, and destructive `rm -rf` invocations before they execute.
 
 **Data residency:** If using a hosted Anthropic endpoint (e.g. via Azure AI Foundry), configure the CLI to point at that endpoint. Run-log artifacts stay within the CI runner's retention boundary.
 
@@ -876,19 +876,19 @@ Double for complex stories, halve for simple ones. At 50 stories/week the bill i
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | All skills abort with `"Run /bootstrap-project first."` | `shared/project/PROFILE.md` does not exist | Run `/bootstrap-project`, complete the checklist, rename `PROFILE.draft.md` → `PROFILE.md` |
-| `/requirements-analysis` or other skill commands not found | The ai-sdlc plugin was not installed for this session | Run `copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator` or `claude plugin add --from ...` |
+| `/requirements-analysis` or other skill commands not found | The Conductor plugin was not installed for this session | Run `copilot plugin install --from https://github.com/deepu-roy/Conductor` or `claude plugin add --from ...` |
 | Hook not running (macOS/Linux) | Plugin bin scripts not executable | Re-install the plugin; verify `plugin/bin/*` retained their executable bit in git (`git ls-files -s plugin/bin`) |
 | Hook not running (Windows Git Bash) | Path uses forward slashes but Git Bash expects native paths | Set `MSYS_NO_PATHCONV=1` in Git Bash |
 | Hook not running (Windows native) | `.sh`-style bash scripts cannot run natively | Use WSL2 (Option A) or Git Bash (Option B) |
-| `"PROFILE.md not found; defaulting to github repo_host."` from `ai-sdlc-create-pr` | Bin tool called before `PROFILE.md` is activated | Rename `PROFILE.draft.md` → `PROFILE.md` after bootstrap review |
-| `Unknown notification type: <x>` from `ai-sdlc-notify` | `orchestration.notifications.type` contains an unsupported value | Set to `slack`, `teams`, or `webhook` in PROFILE.md |
-| `Unknown repo_host: <x>` from `ai-sdlc-create-pr` | `orchestration.repo_host` contains an unsupported value | Set to `github` or `azure-repos` in PROFILE.md |
+| `"PROFILE.md not found; defaulting to github repo_host."` from `conductor-create-pr` | Bin tool called before `PROFILE.md` is activated | Rename `PROFILE.draft.md` → `PROFILE.md` after bootstrap review |
+| `Unknown notification type: <x>` from `conductor-notify` | `orchestration.notifications.type` contains an unsupported value | Set to `slack`, `teams`, or `webhook` in PROFILE.md |
+| `Unknown repo_host: <x>` from `conductor-create-pr` | `orchestration.repo_host` contains an unsupported value | Set to `github` or `azure-repos` in PROFILE.md |
 | Scope block: `"Subagent 'backend-dev' has no declared scope covering apps/web/..."` | backend-dev attempted to write a frontend file — usually a prompt misunderstanding | Review subagent prompt. The subagent must return a blocker in its JSON summary, not edit out of scope |
 | Merge conflict in `merge-and-pr` job | Scope violation — backend and frontend sub-branches touched the same file | Investigate which shared file was written by both subagents. Fix the `slices.md` file-scope declarations or the subagent prompts |
 | Feature PR opened as draft unexpectedly | `verify-story` returned `ISSUES_FOUND` or `BLOCKED` | Read `docs/designs/WI-<id>/verification.md` for specific AC failures |
 | Browser verification skipped | Chrome MCP not connected, or all slices are `layer: backend` only, or `skip_browser_verification: true` | Check the run log for the skip reason; connect Chrome MCP for local runs |
 | ADO work item state not updated after merge | `post-merge.yml` could not parse `WI-<id>` from commit message | Ensure merge commit message contains `WI-<id>`; verify `ADO_PAT` secret is set and has work item write permission |
-| Notification not sent after design PR | `ai-sdlc-notify` silently skipped (PROFILE.md not found or notification not configured) | Verify PROFILE.md exists and `orchestration.notifications.*` fields are filled in without `[NEEDS HUMAN INPUT]` |
+| Notification not sent after design PR | `conductor-notify` silently skipped (PROFILE.md not found or notification not configured) | Verify PROFILE.md exists and `orchestration.notifications.*` fields are filled in without `[NEEDS HUMAN INPUT]` |
 | `yq: command not found` in CI | yq install step failed or was skipped | Verify the `Install tooling` step in the workflow ran successfully; yq binary path is `/usr/local/bin/yq` |
 | `az devops login` fails | `ADO_PAT` secret not set or expired | Verify the secret in GitHub Actions settings; rotate the PAT if expired |
 | Pipeline step exits 0 but no skill output produced | Copilot/Claude invocation received but the skill aborted due to missing PROFILE.md or malformed input | Check the `copilot-output.log` / run-log artifact; confirm `shared/project/PROFILE.md` is committed to the repo |

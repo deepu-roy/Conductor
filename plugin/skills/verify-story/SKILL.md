@@ -2,7 +2,7 @@
 name: verify-story
 description: Verify implemented story acceptance criteria by driving a real Chrome browser via MCP. Reads ACs from slices.md, performs each Given/When/Then in the browser, screenshots the result, and writes a verification report. Run after implement-story, before PR review. Requires the app to be running locally and Chrome MCP connected.
 argument-hint: "<work-item-id>"
-allowed-tools: Read, Write, Bash(git:*), Bash(curl:*), Bash(yq:*), Bash(jq:*), Bash(ai-sdlc-*), mcp__chrome__navigate, mcp__chrome__screenshot, mcp__chrome__click, mcp__chrome__type, mcp__chrome__find, mcp__chrome__get_page_text, mcp__chrome__read_console_messages, mcp__chrome__read_network_requests, mcp__chrome__form_input
+allowed-tools: Read, Write, Bash(git:*), Bash(curl:*), Bash(yq:*), Bash(jq:*), Bash(conductor-*), mcp__chrome__navigate, mcp__chrome__screenshot, mcp__chrome__click, mcp__chrome__type, mcp__chrome__find, mcp__chrome__get_page_text, mcp__chrome__read_console_messages, mcp__chrome__read_network_requests, mcp__chrome__form_input
 ---
 
 # Browser verification — WI-$1
@@ -202,7 +202,7 @@ fi
 PR_ID=$(az repos pr list --source-branch "$BRANCH" \
   --query '[0].pullRequestId' -o tsv 2>/dev/null)
 if [[ -n "$PR_ID" ]]; then
-  ai-sdlc-pr-comment "$PR_ID" active "$REPORT_BODY"
+  conductor-pr-comment "$PR_ID" active "$REPORT_BODY"
 fi
 ```
 

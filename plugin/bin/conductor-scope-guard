@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ai-sdlc-scope-guard — blocks writes to protected paths
+# conductor-scope-guard — blocks writes to protected paths
 # Called by hooks/hooks.json PostToolUse(Write|Edit)
 set -euo pipefail
 

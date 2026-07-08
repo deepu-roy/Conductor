@@ -2,7 +2,7 @@
 name: update-functional
 description: Incorporate answers to open questions in functional.md, update the document, re-evaluate any existing technical.md and slices.md for downstream impact, apply corrections, and determine whether technical design can now proceed. Use after a human has answered questions flagged in §6 of functional.md.
 argument-hint: "<work-item-id>"
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(ai-sdlc-*)
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(conductor-*)
 ---
 
 # Update functional design with answers
@@ -22,7 +22,7 @@ Read `docs/designs/WI-$1/functional.md`. Extract all items in section 6
 Read the ADO work item comments for any answers posted since the
 document was generated:
 ```bash
-ai-sdlc-wi-show $1 | jq '.comments // .fields["System.History"]'
+conductor-wi-show $1 | jq '.comments // .fields["System.History"]'
 ```
 Also read any inline edits the human made directly to functional.md.
 Capture the source of each answer (comment ID, date, user or "edited functional.md") for citation in the next step.
@@ -43,7 +43,7 @@ For each still UNANSWERED question:
 
 ### Step 4 — Re-run tech-agnostic check
 ```bash
-ai-sdlc-check-tech-agnostic docs/designs/WI-$1/functional.md
+conductor-check-tech-agnostic docs/designs/WI-$1/functional.md
 ```
 
 ### Step 5 — Re-evaluate existing technical design and slices

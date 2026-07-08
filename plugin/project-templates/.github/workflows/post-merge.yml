@@ -31,7 +31,7 @@ jobs:
             organization="${{ vars.ADO_ORG_URL }}" \
             project="${{ vars.ADO_PROJECT }}"
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
 
       - name: Close linked work items
         run: |
@@ -44,7 +44,7 @@ jobs:
           commit_url="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
           for wi in $wis; do
             echo "Closing WI-$wi"
-            ai-sdlc-wi-update "$wi" \
+            conductor-wi-update "$wi" \
               --state "Closed" \
               --discussion "Merged to main: $commit_url" || \
               echo "::warning::Failed to update WI-$wi"
@@ -56,4 +56,4 @@ jobs:
           wis=$(echo "$msg" | grep -oE 'WI-[0-9]+' | sort -u | tr '\n' ' ')
           [[ -z "$wis" ]] && exit 0
           short_sha=$(echo "${{ github.sha }}" | cut -c1-8)
-          ai-sdlc-notify ":white_check_mark: Merged to main: $wis ($short_sha)" || true
+          conductor-notify ":white_check_mark: Merged to main: $wis ($short_sha)" || true

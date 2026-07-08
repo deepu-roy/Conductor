@@ -2,7 +2,7 @@
 name: pr-review
 description: Review a PR diff for correctness, readability, and adherence to project standards. Posts PR comments; never approves. Invoked by the pr-review pipeline.
 argument-hint: "<pr-id>"
-allowed-tools: Read, Grep, Glob, Bash(git:*), Bash(az:*), Bash(jq:*), Bash(ai-sdlc-*)
+allowed-tools: Read, Grep, Glob, Bash(git:*), Bash(az:*), Bash(jq:*), Bash(conductor-*)
 ---
 
 # PR review

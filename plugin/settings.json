@@ -1,12 +1,12 @@
 {
     "plugins": {
-        "ai-sdlc": {
+        "conductor": {
             "enabled": true
         }
     },
     "permissions": {
         "allow": [
-            "Bash(ai-sdlc-*)",
+            "Bash(conductor-*)",
             "Bash(git:*)",
             "Bash(gh:*)",
             "Bash(az:*)",

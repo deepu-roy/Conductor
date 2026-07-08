@@ -13,7 +13,7 @@ pr:
       - 'docs/designs/**'                       # design PRs go through design-gen, not here
 
 variables:
-  - group: ai-sdlc-secrets
+  - group: conductor-secrets
   - name: PR_ID
     value: $(System.PullRequest.PullRequestId)
 
@@ -68,8 +68,8 @@ jobs:
       - bash: |
           set -euo pipefail
           npm install -g @anthropic-ai/claude-code
-          claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
-        displayName: 'Install Claude Code + ai-sdlc plugin'
+          claude plugin add --from https://github.com/deepu-roy/Conductor
+        displayName: 'Install Claude Code + Conductor plugin'
 
       - task: ClaudeCodeBaseTask@1
         displayName: 'Run reviewer: $(AGENT)'
@@ -79,7 +79,7 @@ jobs:
           outputFormat: 'stream-json'
           maxTurns: $(MAX_TURNS)
           model: $(MODEL)
-          allowedTools: 'Task,Read,Grep,Glob,Bash(git:*),Bash(az:*),Bash(jq:*),Bash(ai-sdlc-*)'
+          allowedTools: 'Task,Read,Grep,Glob,Bash(git:*),Bash(az:*),Bash(jq:*),Bash(conductor-*)'
           extraArgs: '--dangerously-skip-permissions'
         env:
           CLAUDE_RUN_ID: '$(Build.BuildId)-$(AGENT)'
@@ -95,5 +95,5 @@ jobs:
         condition: always()
 
       - publish: $(Build.ArtifactStagingDirectory)
-        artifact: ai-sdlc-run-log-$(AGENT)
+        artifact: conductor-run-log-$(AGENT)
         condition: always()

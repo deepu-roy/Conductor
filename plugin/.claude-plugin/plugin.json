@@ -1,11 +1,11 @@
 {
-  "name": "ai-sdlc",
+  "name": "conductor",
   "description": "AI-assisted SDLC pipeline — from tagged work item to merged PR, with human gates at every step. Provides skills for requirements analysis, technical slicing, implementation orchestration, and automated PR review.",
   "version": "1.0.0",
   "author": {
     "name": "Deepu Roy"
   },
-  "homepage": "https://github.com/deepu-roy/ai-sdlc-orchestrator",
+  "homepage": "https://github.com/deepu-roy/Conductor",
   "license": "MIT",
   "keywords": ["sdlc", "pipeline", "code-review", "security", "ado", "work-items", "orchestration"],
   "category": "productivity"

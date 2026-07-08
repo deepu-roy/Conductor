@@ -67,10 +67,10 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
-          git config user.email "ai-sdlc[bot]@users.noreply.github.com"
-          git config user.name "ai-sdlc[bot]"
+          git config user.email "conductor[bot]@users.noreply.github.com"
+          git config user.name "conductor[bot]"
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
 
       - name: Check for contract slices
         id: check
@@ -128,10 +128,10 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
-          git config user.email "ai-sdlc[bot]@users.noreply.github.com"
-          git config user.name "ai-sdlc[bot]"
+          git config user.email "conductor[bot]@users.noreply.github.com"
+          git config user.name "conductor[bot]"
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
 
       - name: Run backend-dev
         run: |
@@ -169,10 +169,10 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
-          git config user.email "ai-sdlc[bot]@users.noreply.github.com"
-          git config user.name "ai-sdlc[bot]"
+          git config user.email "conductor[bot]@users.noreply.github.com"
+          git config user.name "conductor[bot]"
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
 
       - name: Run frontend-dev
         run: |
@@ -210,9 +210,9 @@ jobs:
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
           npm install -g @github/copilot
-          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
-          git config user.email "ai-sdlc[bot]@users.noreply.github.com"
-          git config user.name "ai-sdlc[bot]"
+          copilot plugin install --from https://github.com/deepu-roy/Conductor
+          git config user.email "conductor[bot]@users.noreply.github.com"
+          git config user.name "conductor[bot]"
 
       - name: Merge sub-branches
         id: merge
@@ -249,7 +249,7 @@ jobs:
             --title "WI-$WI: Implementation" \
             --body "## Implementation of WI-$WI
 
-          Backend and frontend slices implemented by AI-SDLC subagents.
+          Backend and frontend slices implemented by Conductor subagents.
 
           ### Review checklist
           - [ ] Code correctness
@@ -265,7 +265,7 @@ jobs:
         run: |
           WI="${{ needs.derive-wi.outputs.wi }}"
           PR_URL=$(gh pr view "story/WI-$WI" --json url -q '.url' 2>/dev/null || echo "unknown")
-          ai-sdlc-wi-update "$WI" --state "Resolved" --discussion "Feature PR: $PR_URL" || true
-          ai-sdlc-notify "Feature PR open for WI-$WI — $PR_URL" || true
+          conductor-wi-update "$WI" --state "Resolved" --discussion "Feature PR: $PR_URL" || true
+          conductor-notify "Feature PR open for WI-$WI — $PR_URL" || true
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

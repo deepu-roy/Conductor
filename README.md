@@ -1,4 +1,4 @@
-# AI-SDLC Plugin
+# Conductor
 
 AI-assisted SDLC pipeline — from tagged work item to merged PR, with human gates at every decision point.
 
@@ -39,7 +39,7 @@ The plugin format is cross-tool compatible — the same plugin works in **Claude
 2. Run **Chat: Install Plugin From Source**
 3. Enter the repository URL:
    ```
-   https://github.com/deepu-roy/ai-sdlc-orchestrator
+   https://github.com/deepu-roy/Conductor
    ```
 
 The plugin appears in the **Agent Plugins - Installed** view in the Extensions sidebar. Skills, agents, hooks, and CLI tools are immediately available in chat.
@@ -51,14 +51,14 @@ If you cloned the repo locally, register it via VS Code settings:
 ```jsonc
 // settings.json
 "chat.pluginLocations": {
-    "/path/to/ai-sdlc-orchestrator/plugin": true
+    "/path/to/Conductor/plugin": true
 }
 ```
 
 ### GitHub Copilot CLI
 
 ```bash
-copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+copilot plugin install --from https://github.com/deepu-roy/Conductor
 ```
 
 Plugins installed via the CLI are auto-discovered by VS Code from `~/.copilot/installed-plugins/`.
@@ -66,14 +66,14 @@ Plugins installed via the CLI are auto-discovered by VS Code from `~/.copilot/in
 ### Claude Code — from GitHub
 
 ```bash
-claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+claude plugin add --from https://github.com/deepu-roy/Conductor
 ```
 
 ### Claude Code — from local clone
 
 ```bash
-git clone https://github.com/deepu-roy/ai-sdlc-orchestrator.git
-claude plugin add --from ./ai-sdlc-orchestrator/plugin
+git clone https://github.com/deepu-roy/Conductor.git
+claude plugin add --from ./Conductor/plugin
 ```
 
 > **Cross-tool note:** VS Code auto-detects the plugin format by finding `.claude-plugin/plugin.json`. The same plugin directory works in all three tools without modification.
@@ -84,11 +84,11 @@ claude plugin add --from ./ai-sdlc-orchestrator/plugin
 
 ### 1. Install the plugin
 
-**VS Code (Copilot):** Command Palette → `Chat: Install Plugin From Source` → enter `https://github.com/deepu-roy/ai-sdlc-orchestrator`
+**VS Code (Copilot):** Command Palette → `Chat: Install Plugin From Source` → enter `https://github.com/deepu-roy/Conductor`
 
 **Claude Code:**
 ```bash
-claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+claude plugin add --from https://github.com/deepu-roy/Conductor
 ```
 
 ### 2. Run bootstrap in your target repo
@@ -136,7 +136,7 @@ Also fill in `gates` (compile, test, lint commands), `stacks` (framework details
 mv shared/project/PROFILE.draft.md shared/project/PROFILE.md
 ```
 
-All AI-SDLC skills will abort with a helpful error until `PROFILE.md` exists.
+All Conductor skills will abort with a helpful error until `PROFILE.md` exists.
 
 ### 5. Copy pipeline templates
 
@@ -243,21 +243,21 @@ File scopes are enforced by `scope-map.json` and the scope-guard hook. Agents ca
 
 ### CLI tools (11)
 
-All prefixed with `ai-sdlc-` and automatically available on PATH when the plugin is active.
+All prefixed with `conductor-` and automatically available on PATH when the plugin is active.
 
 | Command | Purpose |
 |---------|---------|
-| `ai-sdlc-wi-show` | Fetch work item details from ADO |
-| `ai-sdlc-wi-update` | Update work item state/fields |
-| `ai-sdlc-wi-create-slice` | Create child task work item from a slice |
-| `ai-sdlc-create-pr` | Create PR on GitHub or Azure Repos |
-| `ai-sdlc-pr-comment` | Post a comment on a PR |
-| `ai-sdlc-notify` | Send notification via Slack, Teams, or generic webhook |
-| `ai-sdlc-check-compile` | Run the compile gate from PROFILE.md |
-| `ai-sdlc-check-startup` | Run the startup healthcheck gate |
-| `ai-sdlc-check-tech-agnostic` | Verify functional docs contain no tech-specific terms |
-| `ai-sdlc-scope-guard` | Block writes to protected paths |
-| `ai-sdlc-bash-guard` | Block dangerous shell operations (`--force`, `--no-verify`, `rm -rf`) |
+| `conductor-wi-show` | Fetch work item details from ADO |
+| `conductor-wi-update` | Update work item state/fields |
+| `conductor-wi-create-slice` | Create child task work item from a slice |
+| `conductor-create-pr` | Create PR on GitHub or Azure Repos |
+| `conductor-pr-comment` | Post a comment on a PR |
+| `conductor-notify` | Send notification via Slack, Teams, or generic webhook |
+| `conductor-check-compile` | Run the compile gate from PROFILE.md |
+| `conductor-check-startup` | Run the startup healthcheck gate |
+| `conductor-check-tech-agnostic` | Verify functional docs contain no tech-specific terms |
+| `conductor-scope-guard` | Block writes to protected paths |
+| `conductor-bash-guard` | Block dangerous shell operations (`--force`, `--no-verify`, `rm -rf`) |
 
 ### Hooks (2)
 
@@ -328,7 +328,7 @@ ADO work item tagged ai:ready
 
 ### Azure Pipelines
 
-**1. Create CI secrets** — Project Settings → Pipelines → Library → create variable group `ai-sdlc-secrets`:
+**1. Create CI secrets** — Project Settings → Pipelines → Library → create variable group `conductor-secrets`:
 
 | Variable | Type | Value |
 |----------|------|-------|
@@ -413,7 +413,7 @@ If your environment has the Azure DevOps MCP server available, it can supplement
 
 ## CLI prerequisites
 
-Install these tools before running any AI-SDLC skills:
+Install these tools before running any Conductor skills:
 
 ```bash
 # Azure CLI + DevOps extension (required for ADO work items)

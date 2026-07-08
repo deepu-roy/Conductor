@@ -2,7 +2,7 @@
 name: security-review
 description: Review a PR diff for security issues — OWASP Top 10, LLM-specific risks, injection, secrets, auth, and data exposure. Posts PR comments; never approves.
 argument-hint: "<pr-id>"
-allowed-tools: Read, Grep, Glob, Bash(git:*), Bash(az:*), Bash(jq:*), Bash(ai-sdlc-*)
+allowed-tools: Read, Grep, Glob, Bash(git:*), Bash(az:*), Bash(jq:*), Bash(conductor-*)
 ---
 
 # Security review
@@ -105,7 +105,7 @@ fi
 PR_ID=$(az repos pr list --source-branch "$BRANCH" \
   --query '[0].pullRequestId' -o tsv 2>/dev/null)
 if [[ -n "$PR_ID" ]]; then
-  ai-sdlc-pr-comment "$PR_ID" active "$REPORT_BODY"
+  conductor-pr-comment "$PR_ID" active "$REPORT_BODY"
 fi
 ```
 

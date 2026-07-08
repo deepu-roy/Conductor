@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ai-sdlc-bash-guard — blocks dangerous shell operations
+# conductor-bash-guard — blocks dangerous shell operations
 # Called by hooks/hooks.json PreToolUse(Bash)
 set -euo pipefail
 

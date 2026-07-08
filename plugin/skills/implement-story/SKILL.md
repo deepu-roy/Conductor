@@ -2,7 +2,7 @@
 name: implement-story
 description: Orchestrate multi-slice story implementation. Delegates to contract-dev, backend-dev, and frontend-dev subagents with enforced file-boundary scopes, merges their work, runs tests, opens one feature PR. Use when invoked with a parent work item ID after its design PR has merged.
 argument-hint: "<parent-work-item-id>"
-allowed-tools: Task, Read, Write, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(az:*), Bash(curl:*), Bash(jq:*), Bash(yq:*), Bash(ai-sdlc-*)
+allowed-tools: Task, Read, Write, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(az:*), Bash(curl:*), Bash(jq:*), Bash(yq:*), Bash(conductor-*)
 ---
 
 # Implement story (orchestrator)
@@ -92,8 +92,8 @@ git merge --no-ff story/WI-$1/frontend
 If both merges are clean, run gates in this order. Stop at first failure.
 
 1. **Test suite:** `gates.pre_merge` from PROFILE.md
-2. **Compile checks:** `ai-sdlc-check-compile both`
-3. **Startup check:** `ai-sdlc-check-startup both`
+2. **Compile checks:** `conductor-check-compile both`
+3. **Startup check:** `conductor-check-startup both`
 4. **Browser verification (Phase 5c)** — chained call below
 
 If all four pass → proceed to Phase 6 (open PR).
@@ -245,12 +245,12 @@ DESC
 For each slice's child work item:
 
 ```bash
-ai-sdlc-wi-update <slice-wi-id> --state "Resolved" \
+conductor-wi-update <slice-wi-id> --state "Resolved" \
   --discussion "Implemented in PR <feature-pr-url>"
 ```
 
 ```bash
-ai-sdlc-notify "Feature PR open for WI-$1 — <PR URL>"
+conductor-notify "Feature PR open for WI-$1 — <PR URL>"
 ```
 
 ### Phase 8 — Handoff

@@ -1,6 +1,6 @@
-# Functional Design — AI-Assisted SDLC
+# Functional Design — Conductor
 
-**Project codename:** AI-SDLC
+**Project codename:** Conductor
 **Version:** 2.0 (unified `plugin/` distribution — GitHub Copilot and Claude Code)
 **Audience:** Engineering lead, platform team, project owner
 **Related:** `TECHNICAL_DESIGN.md`
@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-Deliver a working SDLC pipeline where an AI coding tool — GitHub Copilot or Claude Code, both loading the same installed `ai-sdlc` plugin and guided by composable, project-aware skills — converts a tagged ADO work item into a reviewed design, implementation PRs, and automated review comments. Humans remain the decision-makers at every gate. The system removes typing, not judgement.
+Deliver a working SDLC pipeline where an AI coding tool — GitHub Copilot or Claude Code, both loading the same installed `conductor` plugin and guided by composable, project-aware skills — converts a tagged ADO work item into a reviewed design, implementation PRs, and automated review comments. Humans remain the decision-makers at every gate. The system removes typing, not judgement.
 
 ## 2. Goals and non-goals
 
@@ -37,7 +37,7 @@ Deliver a working SDLC pipeline where an AI coding tool — GitHub Copilot or Cl
 | Tech Lead | Ensure design is sound, slicing is safe, tech debt isn't introduced | Reviews design PR, sets merge policy |
 | Developer | Fix what Claude got wrong, own the eventual merge | Reviews feature PRs, pairs on slices |
 | Security reviewer | Catch auth/PII/injection mistakes before merge | Reads security subagent comments, final approve on sensitive PRs |
-| Platform owner | Keep the pipeline reliable and auditable | Owns the `ai-sdlc` plugin (`plugin/skills/`, `plugin/agents/`), watches run logs |
+| Platform owner | Keep the pipeline reliable and auditable | Owns the `conductor` plugin (`plugin/skills/`, `plugin/agents/`), watches run logs |
 
 ## 4. Scope of work covered (the six stages)
 
@@ -104,7 +104,7 @@ This number degrades sharply for:
 
 When the system is dropped into a new repo for the first time:
 
-1. A human installs the `ai-sdlc` plugin once (`copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator` or `claude plugin add --from ...`), then runs `/bootstrap-project` once, locally.
+1. A human installs the `conductor` plugin once (`copilot plugin install --from https://github.com/deepu-roy/Conductor` or `claude plugin add --from ...`), then runs `/bootstrap-project` once, locally.
 2. The skill scans manifests, framework signals, CI config, test frameworks, linter configs, and infra files. It does not write or commit.
 3. It generates `shared/project/PROFILE.draft.md` with every claim citing the file and line that supports it, and copies the CI pipeline templates from the plugin into `.azure-pipelines/` or `.github/workflows/`.
 4. The human reviews, corrects, and renames to `PROFILE.md`. This commit activates the project layer.
@@ -122,7 +122,7 @@ Every plugin skill, before producing output, consults in this order:
 
 On conflict, the higher-precedence source wins.
 
-**Plugin skills are read-only from the project's perspective.** Projects never edit them directly — they live in `plugin/skills/` inside the installed `ai-sdlc` plugin and are distributed as a single plugin package (`marketplace.json` / `plugin/.claude-plugin/plugin.json`), versioned and updated independently of any consuming project.
+**Plugin skills are read-only from the project's perspective.** Projects never edit them directly — they live in `plugin/skills/` inside the installed `conductor` plugin and are distributed as a single plugin package (`marketplace.json` / `plugin/.claude-plugin/plugin.json`), versioned and updated independently of any consuming project.
 
 ## 10. CLI-first policy — functional description
 
@@ -144,7 +144,7 @@ A story's slices are grouped by layer:
 The orchestrator spawns subagents by layer. Each subagent runs in a forked context with:
 
 - Its own tool whitelist.
-- Its own file-read/write scope (enforced via the `ai-sdlc-scope-guard` hook, backed by `plugin/scope-map.json`).
+- Its own file-read/write scope (enforced via the `conductor-scope-guard` hook, backed by `plugin/scope-map.json`).
 - Its own test command.
 
 Contract-dev runs first and alone. On completion, its branch is merged into the story branch. Backend-dev and frontend-dev then spawn in parallel, both branching from the contract merge. They cannot touch each other's files; the hook blocks and reports violations.
@@ -195,7 +195,7 @@ Merge back into `story/WI-<id>` is done by the orchestrator. If merge conflicts 
 ## 16. Open questions for the human owner
 
 1. Which pilot repo? Recommend a medium-complexity fullstack repo with a cooperative team and a tolerant branch policy.
-2. Who owns the `ai-sdlc` plugin (`plugin/skills/`, `plugin/agents/` in this repo)? A platform team of at least two is strongly advised.
+2. Who owns the `conductor` plugin (`plugin/skills/`, `plugin/agents/` in this repo)? A platform team of at least two is strongly advised.
 3. Which ADO project area has an `ai:ready` tag defined? Create one if absent.
 4. Which notification channel receives summaries? Recommend a single dedicated Slack/Teams channel; don't spread.
 5. Where do pipeline run-log artifacts live? Minimum: 90-day retention on the CI platform's own artifact store.
@@ -206,7 +206,7 @@ To implement, the platform team needs:
 
 - This document (`FUNCTIONAL_DESIGN.md`) for the "why and what".
 - `TECHNICAL_DESIGN.md` for the "how".
-- This repo (`ai-sdlc-orchestrator`), installed as a plugin into the target project via `copilot plugin install --from ...` or `claude plugin add --from ...`.
+- This repo (`Conductor`), installed as a plugin into the target project via `copilot plugin install --from ...` or `claude plugin add --from ...`.
 - Access to an ADO organization with a non-production pilot project.
 - An Anthropic API key stored as `ANTHROPIC_API_KEY` secret in the pipeline library.
 - An ADO PAT with work item + code + build scopes stored as `ADO_PAT`.

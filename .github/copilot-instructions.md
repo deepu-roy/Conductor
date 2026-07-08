@@ -1,6 +1,6 @@
 # Copilot instructions — Plugin repo contributor policy
 
-This repo is the **ai-sdlc plugin distribution repository**. It contains the installable plugin (`plugin/`), documentation, and marketplace manifest. It does NOT implement the SDLC workflow for itself.
+This repo is the **Conductor plugin distribution repository**. It contains the installable plugin (`plugin/`), documentation, and marketplace manifest. It does NOT implement the SDLC workflow for itself.
 
 ## What lives here
 
@@ -14,8 +14,8 @@ This repo is the **ai-sdlc plugin distribution repository**. It contains the ins
 
 - **Never touch `plugin/` files without updating `plugin/.claude-plugin/plugin.json`** if you add/remove a skill, agent, or bin script.
 - **Bump version** in both `plugin/.claude-plugin/plugin.json` and `marketplace.json` on every release (semver).
-- **Bin scripts** must follow the `ai-sdlc-<name>` prefix convention and have `set -euo pipefail`.
-- **Skills** must reference `ai-sdlc-<name>` for script calls — never `shared/scripts/`.
+- **Bin scripts** must follow the `conductor-<name>` prefix convention and have `set -euo pipefail`.
+- **Skills** must reference `conductor-<name>` for script calls — never `shared/scripts/`.
 - **Never approve or merge PRs.** Post comments only. Humans approve.
 - No `git push --force`. No `git commit --no-verify`.
 

@@ -16,7 +16,7 @@ parameters:
     default: ''                                 # populated by webhook payload mapping
 
 variables:
-  - group: ai-sdlc-secrets                      # must contain: ANTHROPIC_API_KEY, ADO_PAT, SLACK_WEBHOOK_URL
+  - group: conductor-secrets                      # must contain: ANTHROPIC_API_KEY, ADO_PAT, SLACK_WEBHOOK_URL
   - name: CLAUDE_MODEL
     value: 'claude-opus-4-7'                    # design quality matters most here
 
@@ -55,8 +55,8 @@ jobs:
       - bash: |
           set -euo pipefail
           npm install -g @anthropic-ai/claude-code
-          claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
-        displayName: 'Install Claude Code + ai-sdlc plugin'
+          claude plugin add --from https://github.com/deepu-roy/Conductor
+        displayName: 'Install Claude Code + Conductor plugin'
 
       - task: ClaudeCodeBaseTask@1
         displayName: 'Run Claude: /requirements-analysis'
@@ -66,7 +66,7 @@ jobs:
           outputFormat: 'stream-json'
           maxTurns: 30
           model: $(CLAUDE_MODEL)
-          allowedTools: 'Read,Write,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(ai-sdlc-*)'
+          allowedTools: 'Read,Write,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(conductor-*)'
           extraArgs: '--dangerously-skip-permissions'
         env:
           CLAUDE_RUN_ID: '$(Build.BuildId)'
@@ -82,5 +82,5 @@ jobs:
         condition: always()
 
       - publish: $(Build.ArtifactStagingDirectory)
-        artifact: ai-sdlc-run-log
+        artifact: conductor-run-log
         condition: always()

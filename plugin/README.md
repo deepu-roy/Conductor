@@ -1,4 +1,4 @@
-# ai-sdlc Plugin
+# Conductor
 
 AI-assisted SDLC pipeline — from tagged work item to merged PR, with human gates at every step.
 
@@ -10,14 +10,14 @@ This plugin is cross-tool compatible — it works in **GitHub Copilot (VS Code)*
 
 1. Open Command Palette (`⇧⌘P` / `Ctrl+Shift+P`)
 2. Run **Chat: Install Plugin From Source**
-3. Enter: `https://github.com/deepu-roy/ai-sdlc-orchestrator`
+3. Enter: `https://github.com/deepu-roy/Conductor`
 
 Or register a local clone in VS Code settings:
 
 ```jsonc
 // settings.json
 "chat.pluginLocations": {
-    "/path/to/ai-sdlc-orchestrator/plugin": true
+    "/path/to/Conductor/plugin": true
 }
 ```
 
@@ -26,13 +26,13 @@ Or register a local clone in VS Code settings:
 ### GitHub Copilot CLI
 
 ```bash
-copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+copilot plugin install --from https://github.com/deepu-roy/Conductor
 ```
 
 ### Claude Code
 
 ```bash
-claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+claude plugin add --from https://github.com/deepu-roy/Conductor
 ```
 
 See the [main README](../README.md#installation) for full installation details.
@@ -42,7 +42,7 @@ See the [main README](../README.md#installation) for full installation details.
 After installing, run the bootstrap skill to initialize your project:
 
 ```
-/ai-sdlc:bootstrap-project
+/conductor:bootstrap-project
 ```
 
 This creates `shared/project/` in your repo with:
@@ -84,17 +84,17 @@ This creates `shared/project/` in your repo with:
 
 | Command | Purpose |
 |---------|---------|
-| `ai-sdlc-wi-show` | Fetch work item details from ADO |
-| `ai-sdlc-wi-update` | Update work item state/fields |
-| `ai-sdlc-wi-create-slice` | Create child task WI from slice |
-| `ai-sdlc-create-pr` | Create PR (GitHub or ADO) |
-| `ai-sdlc-pr-comment` | Post PR comment |
-| `ai-sdlc-notify` | Send notification (webhook) |
-| `ai-sdlc-check-compile` | Run compile gate |
-| `ai-sdlc-check-startup` | Run startup healthcheck gate |
-| `ai-sdlc-check-tech-agnostic` | Verify functional docs are tech-agnostic |
-| `ai-sdlc-scope-guard` | Block writes to protected paths |
-| `ai-sdlc-bash-guard` | Block dangerous shell operations |
+| `conductor-wi-show` | Fetch work item details from ADO |
+| `conductor-wi-update` | Update work item state/fields |
+| `conductor-wi-create-slice` | Create child task WI from slice |
+| `conductor-create-pr` | Create PR (GitHub or ADO) |
+| `conductor-pr-comment` | Post PR comment |
+| `conductor-notify` | Send notification (webhook) |
+| `conductor-check-compile` | Run compile gate |
+| `conductor-check-startup` | Run startup healthcheck gate |
+| `conductor-check-tech-agnostic` | Verify functional docs are tech-agnostic |
+| `conductor-scope-guard` | Block writes to protected paths |
+| `conductor-bash-guard` | Block dangerous shell operations |
 
 ### Hooks (2)
 

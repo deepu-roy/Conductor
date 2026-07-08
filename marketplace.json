@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "plugins": [
     {
-      "name": "ai-sdlc",
+      "name": "conductor",
       "description": "AI-assisted SDLC pipeline — requirements analysis, technical slicing, implementation orchestration, PR review, security auditing, and story verification. Works with Azure DevOps and GitHub.",
       "version": "1.0.0",
       "source": "./plugin",

@@ -18,7 +18,7 @@ parameters:
     default: ''                                 # pass when triggered manually; auto-derived otherwise
 
 variables:
-  - group: ai-sdlc-secrets
+  - group: conductor-secrets
   - name: CLAUDE_MODEL
     value: 'claude-sonnet-4-6'                  # bulk of work is mechanical; Sonnet is the sweet spot
   - name: PARENT_WI
@@ -77,8 +77,8 @@ jobs:
             organization="$(System.CollectionUri)" \
             project="$(System.TeamProject)"
           # Configure git identity so orchestrator and subagents can commit.
-          git config user.email "ai-sdlc@$(System.TeamProject).local"
-          git config user.name "ai-sdlc[bot]"
+          git config user.email "conductor@$(System.TeamProject).local"
+          git config user.name "conductor[bot]"
         displayName: 'Login + git identity'
         env:
           ADO_PAT: $(ADO_PAT)
@@ -86,8 +86,8 @@ jobs:
       - bash: |
           set -euo pipefail
           npm install -g @anthropic-ai/claude-code
-          claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
-        displayName: 'Install Claude Code + ai-sdlc plugin'
+          claude plugin add --from https://github.com/deepu-roy/Conductor
+        displayName: 'Install Claude Code + Conductor plugin'
 
       - task: ClaudeCodeBaseTask@1
         displayName: 'Run Claude: /implement-story'
@@ -97,7 +97,7 @@ jobs:
           outputFormat: 'stream-json'
           maxTurns: 120
           model: $(CLAUDE_MODEL)
-          allowedTools: 'Task,Read,Write,Edit,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(dotnet:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(python:*),Bash(go:*),Bash(ai-sdlc-*)'
+          allowedTools: 'Task,Read,Write,Edit,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(dotnet:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(python:*),Bash(go:*),Bash(conductor-*)'
           extraArgs: '--dangerously-skip-permissions'
         env:
           CLAUDE_RUN_ID: '$(Build.BuildId)'
@@ -113,5 +113,5 @@ jobs:
         condition: always()
 
       - publish: $(Build.ArtifactStagingDirectory)
-        artifact: ai-sdlc-run-log
+        artifact: conductor-run-log
         condition: always()
