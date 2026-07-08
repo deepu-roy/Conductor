@@ -15,7 +15,7 @@ You are converting ADO work item **$1** into three design artifacts + child work
 2. **Tech-agnostic `functional.md`.** Blocklist: OAuth, JWT, REST, GraphQL, gRPC, PostgreSQL, MySQL, Redis, MongoDB, React, Angular, Vue, Next, Kubernetes, Docker, AWS, Azure (as cloud service), Lambda, S3, Cosmos, RabbitMQ, Kafka. These are allowed in `technical.md`.
 3. **Measurable success criteria.** Reject adjectives (fast, secure, scalable). Require numbers or user-observable behaviour.
 4. **One slice = one PR-sized unit.** Disjoint file scopes between parallel slices. Measurable AC, declared impact, declared risk, test plan.
-5. **No auto-merge. No pushes to main. No edits to `shared/skills/`, `.azure-pipelines/`, or secret files.** Hooks enforce.
+5. **No auto-merge. No pushes to main. No edits to `plugin/skills/`, `.azure-pipelines/`, or secret files.** Hooks enforce.
 
 ## Procedure
 

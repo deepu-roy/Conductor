@@ -67,10 +67,10 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
-          chmod +x .github/hooks/*.sh && chmod +x shared/scripts/*.sh
           git config user.email "ai-sdlc[bot]@users.noreply.github.com"
           git config user.name "ai-sdlc[bot]"
           npm install -g @github/copilot
+          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
 
       - name: Check for contract slices
         id: check
@@ -128,10 +128,10 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
-          chmod +x .github/hooks/*.sh && chmod +x shared/scripts/*.sh
           git config user.email "ai-sdlc[bot]@users.noreply.github.com"
           git config user.name "ai-sdlc[bot]"
           npm install -g @github/copilot
+          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
 
       - name: Run backend-dev
         run: |
@@ -146,15 +146,6 @@ jobs:
         env:
           CLAUDE_RUN_ID: "${{ github.run_id }}-backend"
           GH_TOKEN: ${{ secrets.COPILOT_TOKEN }}
-
-      - name: Archive trace
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: trace-backend-${{ needs.derive-wi.outputs.wi }}
-          path: .github/trace/
-          retention-days: 90
-          if-no-files-found: ignore
 
   frontend:
     name: Frontend implementation
@@ -178,10 +169,10 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
-          chmod +x .github/hooks/*.sh && chmod +x shared/scripts/*.sh
           git config user.email "ai-sdlc[bot]@users.noreply.github.com"
           git config user.name "ai-sdlc[bot]"
           npm install -g @github/copilot
+          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
 
       - name: Run frontend-dev
         run: |
@@ -196,15 +187,6 @@ jobs:
         env:
           CLAUDE_RUN_ID: "${{ github.run_id }}-frontend"
           GH_TOKEN: ${{ secrets.COPILOT_TOKEN }}
-
-      - name: Archive trace
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: trace-frontend-${{ needs.derive-wi.outputs.wi }}
-          path: .github/trace/
-          retention-days: 90
-          if-no-files-found: ignore
 
   merge-and-pr:
     name: Merge branches and open PR
@@ -227,7 +209,8 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}"
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}"
-          chmod +x shared/scripts/*.sh
+          npm install -g @github/copilot
+          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
           git config user.email "ai-sdlc[bot]@users.noreply.github.com"
           git config user.name "ai-sdlc[bot]"
 
@@ -282,7 +265,7 @@ jobs:
         run: |
           WI="${{ needs.derive-wi.outputs.wi }}"
           PR_URL=$(gh pr view "story/WI-$WI" --json url -q '.url' 2>/dev/null || echo "unknown")
-          shared/scripts/ado-wi-update.sh "$WI" --state "Resolved" --discussion "Feature PR: $PR_URL" || true
-          shared/scripts/slack-notify.sh "Feature PR open for WI-$WI — $PR_URL" || true
+          ai-sdlc-wi-update "$WI" --state "Resolved" --discussion "Feature PR: $PR_URL" || true
+          ai-sdlc-notify "Feature PR open for WI-$WI — $PR_URL" || true
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

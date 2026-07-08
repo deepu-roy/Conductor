@@ -58,16 +58,15 @@ jobs:
             organization="${{ vars.ADO_ORG_URL }}" \
             project="${{ vars.ADO_PROJECT }}"
 
-      - name: Make scripts executable
-        run: chmod +x .github/hooks/*.sh shared/scripts/*.sh
-
       - name: Configure git identity
         run: |
           git config user.email "ai-sdlc[bot]@users.noreply.github.com"
           git config user.name "ai-sdlc[bot]"
 
-      - name: Install Copilot CLI
-        run: npm install -g @github/copilot
+      - name: Install Copilot CLI and ai-sdlc plugin
+        run: |
+          npm install -g @github/copilot
+          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
 
       - name: Run requirements-analysis
         run: |
@@ -82,11 +81,11 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_TOKEN }}
           CLAUDE_RUN_ID: ${{ github.run_id }}
 
-      - name: Archive trace
+      - name: Archive run log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: github-trace-${{ steps.wi.outputs.id }}
-          path: .github/trace/
+          name: copilot-log-${{ steps.wi.outputs.id }}
+          path: copilot-output.log
           retention-days: 90
           if-no-files-found: ignore

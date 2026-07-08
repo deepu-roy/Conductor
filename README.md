@@ -558,7 +558,7 @@ The plugin's skills, agents, hooks, and CLI tools are managed by the plugin syst
 - **Bash guard.** Blocks `git push --force`, `git commit --no-verify`, `rm -rf /`, and other destructive operations.
 - **Protected paths.** Pipeline YAML, secret files (`.env`, `.pem`, `.key`), and master skills cannot be modified by AI.
 - **Human gates.** Every pipeline stage requires explicit human approval to proceed.
-- **Audit trail.** Every run produces a trace (`.claude/trace/` locally, build artifacts in CI).
+- **Audit trail.** Every run's output is captured to a log file (`copilot-output.log` in CI); Claude Code sessions can also be replayed via its built-in session history.
 
 ---
 

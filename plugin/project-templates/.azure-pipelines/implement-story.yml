@@ -83,8 +83,11 @@ jobs:
         env:
           ADO_PAT: $(ADO_PAT)
 
-      - bash: chmod +x shared/scripts/*.sh
-        displayName: 'Make hooks and scripts executable'
+      - bash: |
+          set -euo pipefail
+          npm install -g @anthropic-ai/claude-code
+          claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+        displayName: 'Install Claude Code + ai-sdlc plugin'
 
       - task: ClaudeCodeBaseTask@1
         displayName: 'Run Claude: /implement-story'
@@ -94,7 +97,7 @@ jobs:
           outputFormat: 'stream-json'
           maxTurns: 120
           model: $(CLAUDE_MODEL)
-          allowedTools: 'Task,Read,Write,Edit,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(dotnet:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(python:*),Bash(go:*),Bash(shared/scripts/*)'
+          allowedTools: 'Task,Read,Write,Edit,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(dotnet:*),Bash(npm:*),Bash(pnpm:*),Bash(npx:*),Bash(python:*),Bash(go:*),Bash(ai-sdlc-*)'
           extraArgs: '--dangerously-skip-permissions'
         env:
           CLAUDE_RUN_ID: '$(Build.BuildId)'
@@ -103,25 +106,12 @@ jobs:
       - bash: |
           set -euo pipefail
           mkdir -p "$(Build.ArtifactStagingDirectory)"
-          if [[ -d .claude/trace ]]; then
-            tar -czf "$(Build.ArtifactStagingDirectory)/claude-trace-$(WI).tar.gz" .claude/trace
+          if [[ -f copilot-output.log ]]; then
+            cp copilot-output.log "$(Build.ArtifactStagingDirectory)/run-$(WI).log"
           fi
-        displayName: 'Archive trace'
+        displayName: 'Archive run log'
         condition: always()
 
       - publish: $(Build.ArtifactStagingDirectory)
-        artifact: claude-trace
-        condition: always()
-
-      - bash: |
-          set -euo pipefail
-          if [[ -f .claude/trace/scope-blocks.jsonl ]]; then
-            blocks=$(wc -l < .claude/trace/scope-blocks.jsonl)
-            echo "Scope-enforce blocks during this run: $blocks"
-            if [[ "$blocks" -gt 0 ]]; then
-              cat .claude/trace/scope-blocks.jsonl
-              echo "##vso[task.logissue type=warning]$blocks scope block(s) — a subagent tried to cross its boundary. Check the trace."
-            fi
-          fi
-        displayName: 'Report scope blocks'
+        artifact: ai-sdlc-run-log
         condition: always()

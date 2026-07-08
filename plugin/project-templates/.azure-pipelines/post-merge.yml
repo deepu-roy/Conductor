@@ -33,8 +33,10 @@ jobs:
         env:
           ADO_PAT: $(ADO_PAT)
 
-      - bash: chmod +x shared/scripts/*.sh
-        displayName: 'Scripts executable'
+      - bash: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+        displayName: 'Install ai-sdlc plugin (provides ai-sdlc-* CLI tools)'
 
       - bash: |
           set -euo pipefail
@@ -50,7 +52,7 @@ jobs:
 
           for wi in $wis; do
             echo "Closing WI-$wi"
-            shared/scripts/ado-wi-update.sh "$wi" \
+            ai-sdlc-wi-update "$wi" \
               --state "Closed" \
               --discussion "Merged to main in $merge_url" \
               >/dev/null || echo "##vso[task.logissue type=warning]Failed to update WI-$wi"
@@ -62,7 +64,7 @@ jobs:
           msg=$(git log -1 --pretty=%B)
           wis=$(echo "$msg" | grep -oE 'WI-[0-9]+' | sort -u | tr '\n' ' ')
           [[ -z "$wis" ]] && exit 0
-          shared/scripts/slack-notify.sh ":white_check_mark: Merged to main: $wis ($(Build.SourceVersion:0:8))"
+          ai-sdlc-notify ":white_check_mark: Merged to main: $wis ($(Build.SourceVersion:0:8))"
         displayName: 'Slack notify'
         env:
           SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)

@@ -10,7 +10,6 @@ pr:
     include: [main]
   paths:
     exclude:
-      - '.claude/trace/**'                      # trace-only changes don't need review
       - 'docs/designs/**'                       # design PRs go through design-gen, not here
 
 variables:
@@ -66,8 +65,11 @@ jobs:
         env:
           ADO_PAT: $(ADO_PAT)
 
-      - bash: chmod +x shared/scripts/*.sh
-        displayName: 'Make hooks and scripts executable'
+      - bash: |
+          set -euo pipefail
+          npm install -g @anthropic-ai/claude-code
+          claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+        displayName: 'Install Claude Code + ai-sdlc plugin'
 
       - task: ClaudeCodeBaseTask@1
         displayName: 'Run reviewer: $(AGENT)'
@@ -77,7 +79,7 @@ jobs:
           outputFormat: 'stream-json'
           maxTurns: $(MAX_TURNS)
           model: $(MODEL)
-          allowedTools: 'Task,Read,Grep,Glob,Bash(git:*),Bash(az:*),Bash(jq:*),Bash(shared/scripts/*)'
+          allowedTools: 'Task,Read,Grep,Glob,Bash(git:*),Bash(az:*),Bash(jq:*),Bash(ai-sdlc-*)'
           extraArgs: '--dangerously-skip-permissions'
         env:
           CLAUDE_RUN_ID: '$(Build.BuildId)-$(AGENT)'
@@ -86,12 +88,12 @@ jobs:
       - bash: |
           set -euo pipefail
           mkdir -p "$(Build.ArtifactStagingDirectory)/$(AGENT)"
-          if [[ -d .claude/trace ]]; then
-            cp -r .claude/trace "$(Build.ArtifactStagingDirectory)/$(AGENT)/"
+          if [[ -f copilot-output.log ]]; then
+            cp copilot-output.log "$(Build.ArtifactStagingDirectory)/$(AGENT)/run.log"
           fi
-        displayName: 'Archive reviewer trace'
+        displayName: 'Archive reviewer run log'
         condition: always()
 
       - publish: $(Build.ArtifactStagingDirectory)
-        artifact: claude-trace-$(AGENT)
+        artifact: ai-sdlc-run-log-$(AGENT)
         condition: always()

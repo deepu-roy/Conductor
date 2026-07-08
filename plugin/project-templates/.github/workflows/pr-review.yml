@@ -14,7 +14,6 @@ on:
   pull_request:
     branches: [master]
     paths-ignore:
-      - ".claude/trace/**"
       - "docs/designs/**"
 
 env:
@@ -64,8 +63,8 @@ jobs:
           az extension add --name azure-devops --yes --only-show-errors
           echo "$ADO_PAT" | az devops login --organization "${{ vars.ADO_ORG_URL }}" || true
           az devops configure --defaults organization="${{ vars.ADO_ORG_URL }}" project="${{ vars.ADO_PROJECT }}" || true
-          chmod +x shared/scripts/*.sh
           npm install -g @github/copilot
+          copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator
 
       - name: Run ${{ matrix.label }}
         run: |
@@ -74,16 +73,17 @@ jobs:
             --allow-all \
             --no-ask-user \
             --agent "${{ matrix.agent }}" \
-            --prompt "Review PR #${{ steps.pr.outputs.number }} on branch ${{ steps.pr.outputs.head_ref }}. Run git diff origin/master...HEAD and post your findings as PR comments. Return your JSON summary at the end."
+            --prompt "Review PR #${{ steps.pr.outputs.number }} on branch ${{ steps.pr.outputs.head_ref }}. Run git diff origin/master...HEAD and post your findings as PR comments. Return your JSON summary at the end." \
+            2>&1 | tee "copilot-output-${{ matrix.agent }}.log"
         env:
           GH_TOKEN: ${{ secrets.COPILOT_TOKEN }}
           CLAUDE_RUN_ID: "${{ github.run_id }}-${{ matrix.agent }}"
 
-      - name: Archive trace
+      - name: Archive run log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: trace-${{ matrix.agent }}-${{ steps.pr.outputs.number }}
-          path: .claude/trace/
+          path: copilot-output-${{ matrix.agent }}.log
           retention-days: 90
           if-no-files-found: ignore

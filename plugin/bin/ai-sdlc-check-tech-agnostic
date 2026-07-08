@@ -16,7 +16,7 @@ if [[ ! -f "$file" ]]; then
 fi
 
 # Case-insensitive word-boundary match. Keep this list in sync with
-# shared/skills/requirements-analysis/SKILL.md.
+# plugin/skills/requirements-analysis/SKILL.md.
 blocklist=(
   OAuth JWT
   REST GraphQL gRPC SOAP

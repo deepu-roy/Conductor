@@ -53,8 +53,10 @@ jobs:
           ADO_PAT: $(ADO_PAT)
 
       - bash: |
-          chmod +x shared/scripts/*.sh
-        displayName: 'Make hooks and scripts executable'
+          set -euo pipefail
+          npm install -g @anthropic-ai/claude-code
+          claude plugin add --from https://github.com/deepu-roy/ai-sdlc-orchestrator
+        displayName: 'Install Claude Code + ai-sdlc plugin'
 
       - task: ClaudeCodeBaseTask@1
         displayName: 'Run Claude: /requirements-analysis'
@@ -64,7 +66,7 @@ jobs:
           outputFormat: 'stream-json'
           maxTurns: 30
           model: $(CLAUDE_MODEL)
-          allowedTools: 'Read,Write,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(shared/scripts/*)'
+          allowedTools: 'Read,Write,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(az:*),Bash(curl:*),Bash(jq:*),Bash(yq:*),Bash(ai-sdlc-*)'
           extraArgs: '--dangerously-skip-permissions'
         env:
           CLAUDE_RUN_ID: '$(Build.BuildId)'
@@ -73,23 +75,12 @@ jobs:
       - bash: |
           set -euo pipefail
           mkdir -p "$(Build.ArtifactStagingDirectory)"
-          if [[ -d .claude/trace ]]; then
-            tar -czf "$(Build.ArtifactStagingDirectory)/claude-trace-${{ parameters.workItemId }}.tar.gz" .claude/trace
+          if [[ -f copilot-output.log ]]; then
+            cp copilot-output.log "$(Build.ArtifactStagingDirectory)/run-${{ parameters.workItemId }}.log"
           fi
-        displayName: 'Archive decision trace'
+        displayName: 'Archive run log'
         condition: always()
 
       - publish: $(Build.ArtifactStagingDirectory)
-        artifact: claude-trace
-        condition: always()
-
-      - bash: |
-          set -euo pipefail
-          if [[ -f .claude/trace/scope-blocks.jsonl ]]; then
-            blocks=$(wc -l < .claude/trace/scope-blocks.jsonl)
-            if [[ "$blocks" -gt 0 ]]; then
-              echo "##vso[task.logissue type=warning]scope-enforce blocked $blocks operation(s) during this run"
-            fi
-          fi
-        displayName: 'Report scope blocks'
+        artifact: ai-sdlc-run-log
         condition: always()

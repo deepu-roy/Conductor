@@ -17,7 +17,8 @@
       "apps/client/**",
       ".azure-pipelines/**",
       ".github/workflows/**",
-      "shared/skills/**",
+      "plugin/skills/**",
+      "plugin/agents/**",
       "*.env",
       "*.pem",
       "*.key"
@@ -41,7 +42,8 @@
       "apps/client/**",
       ".azure-pipelines/**",
       ".github/workflows/**",
-      "shared/skills/**",
+      "plugin/skills/**",
+      "plugin/agents/**",
       "*.env",
       "*.pem",
       "*.key"
@@ -65,7 +67,8 @@
       "apps/server/**",
       ".azure-pipelines/**",
       ".github/workflows/**",
-      "shared/skills/**",
+      "plugin/skills/**",
+      "plugin/agents/**",
       "*.env",
       "*.pem",
       "*.key"
@@ -112,7 +115,8 @@
       "*.env",
       "*.pem",
       "*.key",
-      "shared/skills/**",
+      "plugin/skills/**",
+      "plugin/agents/**",
       ".azure-pipelines/**",
       ".github/workflows/**"
     ]

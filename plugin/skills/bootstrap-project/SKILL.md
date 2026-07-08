@@ -14,7 +14,7 @@ You are onboarding this repo to the AI-SDLC system. You run **once**, invoked ma
 1. **Detect, don't assume.** Every claim in the draft must cite a file and line. If you cannot cite, write `[NEEDS HUMAN INPUT]`.
 2. **Draft only.** Write `shared/project/PROFILE.draft.md`. Never write `PROFILE.md` directly. Never commit or push.
 3. **No silent skill enabling.** List recommended skills; the human decides.
-4. **Do not edit master skills** (`shared/skills/**`). Hooks will block this.
+4. **Do not edit master skills** (`plugin/skills/**`). Hooks will block this.
 5. **Do not write to `.azure-pipelines/**`, secrets, or other protected paths.**
 
 ## Procedure

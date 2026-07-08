@@ -1,7 +1,7 @@
 # Functional Design — AI-Assisted SDLC
 
 **Project codename:** AI-SDLC
-**Version:** 1.0 (handover to Claude Code)
+**Version:** 2.0 (unified `plugin/` distribution — GitHub Copilot and Claude Code)
 **Audience:** Engineering lead, platform team, project owner
 **Related:** `TECHNICAL_DESIGN.md`
 
@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-Deliver a working SDLC pipeline where Claude Code — guided by composable, project-aware skills — converts a tagged ADO work item into a reviewed design, implementation PRs, and automated review comments. Humans remain the decision-makers at every gate. The system removes typing, not judgement.
+Deliver a working SDLC pipeline where an AI coding tool — GitHub Copilot or Claude Code, both loading the same installed `ai-sdlc` plugin and guided by composable, project-aware skills — converts a tagged ADO work item into a reviewed design, implementation PRs, and automated review comments. Humans remain the decision-makers at every gate. The system removes typing, not judgement.
 
 ## 2. Goals and non-goals
 
@@ -37,7 +37,7 @@ Deliver a working SDLC pipeline where Claude Code — guided by composable, proj
 | Tech Lead | Ensure design is sound, slicing is safe, tech debt isn't introduced | Reviews design PR, sets merge policy |
 | Developer | Fix what Claude got wrong, own the eventual merge | Reviews feature PRs, pairs on slices |
 | Security reviewer | Catch auth/PII/injection mistakes before merge | Reads security subagent comments, final approve on sensitive PRs |
-| Platform owner | Keep the pipeline reliable and auditable | Owns `shared/skills/`, watches traces |
+| Platform owner | Keep the pipeline reliable and auditable | Owns the `ai-sdlc` plugin (`plugin/skills/`, `plugin/agents/`), watches run logs |
 
 ## 4. Scope of work covered (the six stages)
 
@@ -54,21 +54,21 @@ Deliver a working SDLC pipeline where Claude Code — guided by composable, proj
 
 1. **PM writes a raw requirement** in an ADO Epic or Feature work item and tags it `ai:ready`.
 2. **ADO Service Hook** fires on the tag → pipeline `design-gen` starts.
-3. Pipeline runs Claude Code headless with `/requirements-analysis <id>`. The skill:
+3. Pipeline runs the AI tool headless with `/requirements-analysis <id>`. The skill:
    - Reads the work item (via `az boards`).
    - Loads `shared/project/PROFILE.md`, policy overrides, guidelines, stacks.
    - Generates `functional.md` (tech-agnostic), `technical.md` (stack-specific), `slices.md` (slicing + AC + risk).
    - Creates child ADO Task work items, one per slice, linked to the parent.
    - Opens a PR `[Design] WI-<id>: <title>` on a `design/WI-<id>` branch.
-   - Posts one Slack message with the PR link.
-4. **Humans review the design PR.** Inline comments drive revisions; if Claude needs to re-run, it reacts to a PR comment trigger. Merge of the design PR = approval to implement.
+   - Posts one notification with the PR link.
+4. **Humans review the design PR.** Inline comments drive revisions; if the skill needs to re-run, it reacts to a PR comment trigger. Merge of the design PR = approval to implement.
 5. **Merge webhook** triggers pipeline `implement-story`. The orchestrator:
    - Classifies slices as contract / backend / frontend.
    - If API contract changes: runs `contract-dev` subagent first, alone. Reviews its output. If contract-dev surfaces a question, stops and asks the human.
    - Spawns `backend-dev` and `frontend-dev` in parallel on disjoint file scopes.
    - Merges their branches into `story/WI-<id>`, runs integration tests, opens one PR.
 6. **PR build** fires three subagents in parallel on the diff: `code-reviewer`, `security-auditor`, `tech-debt-auditor`. Each posts findings as PR comments, tagged by severity. None can approve.
-7. **Humans approve and merge.** Post-merge, ADO work item auto-moves to Resolved via an `az boards` call, and Slack gets a final summary.
+7. **Humans approve and merge.** Post-merge, ADO work item auto-moves to Resolved via an `az boards` call, and a final summary notification goes out.
 
 ## 6. Review and revision points — the full list
 
@@ -97,22 +97,22 @@ For a typical mid-size story (e.g. "allow users to save searches"):
 This number degrades sharply for:
 
 - Stories that cross three or more surfaces (frontend + backend + infra + data). Split these into smaller parent stories.
-- Stories touching quarantined code marked in `overrides/implement-slice.md`. The system will refuse to auto-implement; a human must pair.
+- Stories touching quarantined code marked in `shared/project/PROFILE.md`'s `quarantined_paths`. The system will refuse to auto-implement; a human must pair.
 - Stories requiring new architectural decisions. The skill will flag `[NEEDS ADR]` and stop — this is intentional.
 
 ## 8. Project onboarding — functional description
 
 When the system is dropped into a new repo for the first time:
 
-1. A human runs `claude -p "/bootstrap-project"` once, locally.
+1. A human installs the `ai-sdlc` plugin once (`copilot plugin install --from https://github.com/deepu-roy/ai-sdlc-orchestrator` or `claude plugin add --from ...`), then runs `/bootstrap-project` once, locally.
 2. The skill scans manifests, framework signals, CI config, test frameworks, linter configs, and infra files. It does not write or commit.
-3. It generates `shared/project/PROFILE.draft.md` with every claim citing the file and line that supports it.
+3. It generates `shared/project/PROFILE.draft.md` with every claim citing the file and line that supports it, and copies the CI pipeline templates from the plugin into `.azure-pipelines/` or `.github/workflows/`.
 4. The human reviews, corrects, and renames to `PROFILE.md`. This commit activates the project layer.
-5. Stock `guidelines/` and `stacks/` files are created as starter scaffolds — the human fills them in over the first week of use. All master skills gracefully handle missing optional files; none are required except `PROFILE.md`.
+5. Stock `guidelines/` and `stacks/` files are created as starter scaffolds — the human fills them in over the first week of use. All plugin skills gracefully handle missing optional files; none are required except `PROFILE.md`.
 
 ## 9. Composable skill model — functional description
 
-Every master skill, before producing output, consults in this order:
+Every plugin skill, before producing output, consults in this order:
 
 1. `shared/project/PROFILE.md` — what stack are we in?
 2. `shared/project/CLAUDE.md` — project policy.
@@ -120,9 +120,9 @@ Every master skill, before producing output, consults in this order:
 4. `shared/project/guidelines/*.md` — all files, loaded in alphabetical order.
 5. `shared/project/stacks/<relevant-stack>.md` — only the stacks the PROFILE says apply.
 
-On conflict, the higher-precedence source wins. The skill logs the conflict to the trace so the human can see what decision was made.
+On conflict, the higher-precedence source wins.
 
-**Master skills are read-only.** Projects never edit them. Master skills are distributed via git submodule or an npm package (`@acme/ai-sdlc-skills`) and can be updated independently.
+**Plugin skills are read-only from the project's perspective.** Projects never edit them directly — they live in `plugin/skills/` inside the installed `ai-sdlc` plugin and are distributed as a single plugin package (`marketplace.json` / `plugin/.claude-plugin/plugin.json`), versioned and updated independently of any consuming project.
 
 ## 10. CLI-first policy — functional description
 
@@ -144,7 +144,7 @@ A story's slices are grouped by layer:
 The orchestrator spawns subagents by layer. Each subagent runs in a forked context with:
 
 - Its own tool whitelist.
-- Its own file-read/write scope (enforced via a PreToolUse hook that inspects `.tool_input.file_path`).
+- Its own file-read/write scope (enforced via the `ai-sdlc-scope-guard` hook, backed by `plugin/scope-map.json`).
 - Its own test command.
 
 Contract-dev runs first and alone. On completion, its branch is merged into the story branch. Backend-dev and frontend-dev then spawn in parallel, both branching from the contract merge. They cannot touch each other's files; the hook blocks and reports violations.
@@ -157,11 +157,11 @@ Merge back into `story/WI-<id>` is done by the orchestrator. If merge conflicts 
 |---|---|
 | Skill cannot find required work item field | Writes `[NEEDS HUMAN INPUT]` into the doc; does not invent |
 | Slicing would require touching a quarantined file | Aborts slicing; opens a comment on the parent work item asking for human pairing |
-| Subagent runs out of turns | Pipeline fails loudly with last state preserved; human resumes via local `claude --resume` |
+| Subagent runs out of turns | Pipeline fails loudly with last state preserved; human resumes locally |
 | Contract-dev surfaces ambiguity | Orchestrator stops, posts question, does not spawn backend/frontend |
 | Security subagent finds a `blocker` severity issue | Posts PR comment; pipeline status stays neutral but merge policy (enforced by branch protection in ADO) requires resolution before merge |
-| Hook blocks a tool call | Claude receives the block reason, retries within constraints, or fails loudly |
-| Pipeline token budget exceeded (`--max-turns`) | Fails loudly; no partial commit |
+| Hook blocks a tool call | The agent receives the block reason, retries within constraints, or fails loudly |
+| Pipeline turn budget exceeded (`maxTurns`) | Fails loudly; no partial commit |
 | Deterministic step (lint, test) fails post-impl | Subagent tries up to 3 self-repair loops, then fails loudly |
 
 ## 13. Success criteria (measurable)
@@ -170,16 +170,16 @@ Merge back into `story/WI-<id>` is done by the orchestrator. If merge conflicts 
 - For a typical story (backend + frontend, no new ADR), end-to-end human time from tag to merge is under two hours.
 - Design-PR revision rate: >50% of design PRs require zero or one revision round.
 - Security subagent catches a seeded OWASP Top-10 issue in >70% of planted cases in a weekly regression suite.
-- Zero auto-merges; zero writes to protected files (verified via hook audit log).
-- Trace archive (`claude-trace-*.jsonl.gz`) exists for every pipeline run, retained 90 days.
+- Zero auto-merges; zero writes to protected files (verified via hook logs).
+- A run-log artifact exists for every pipeline run, retained 90 days.
 
 ## 14. Out of scope for v1
 
-- A web UI. The system lives in ADO, Git, and Slack.
-- Auto-generating ADRs. Claude flags when an ADR is needed; humans write it.
+- A web UI. The system lives in ADO, Git, and chat notifications (Slack/Teams).
+- Auto-generating ADRs. The AI flags when an ADR is needed; humans write it.
 - Multi-repo refactors. One repo per run.
 - Languages / stacks not yet represented in `stacks/`. Add as you go.
-- Real-time observability dashboards. Read the trace archives; a dashboard is phase 2.
+- Real-time observability dashboards. Read the run-log artifacts; a dashboard is phase 2.
 
 ## 15. Rollout plan — functional view
 
@@ -195,19 +195,19 @@ Merge back into `story/WI-<id>` is done by the orchestrator. If merge conflicts 
 ## 16. Open questions for the human owner
 
 1. Which pilot repo? Recommend a medium-complexity fullstack repo with a cooperative team and a tolerant branch policy.
-2. Who owns `shared/skills/` (the master pack)? A platform team of at least two is strongly advised.
+2. Who owns the `ai-sdlc` plugin (`plugin/skills/`, `plugin/agents/` in this repo)? A platform team of at least two is strongly advised.
 3. Which ADO project area has an `ai:ready` tag defined? Create one if absent.
-4. Which Slack channel receives summaries? Recommend a single dedicated channel; don't spread.
-5. Where does the trace archive live? Minimum: Azure Blob with 90-day retention.
+4. Which notification channel receives summaries? Recommend a single dedicated Slack/Teams channel; don't spread.
+5. Where do pipeline run-log artifacts live? Minimum: 90-day retention on the CI platform's own artifact store.
 
-## 17. Handover checklist to Claude Code
+## 17. Handover checklist
 
-To implement, Claude Code needs:
+To implement, the platform team needs:
 
 - This document (`FUNCTIONAL_DESIGN.md`) for the "why and what".
 - `TECHNICAL_DESIGN.md` for the "how".
-- The starter repo (provided alongside) containing `shared/skills/`, `.claude/agents/`, `.claude/hooks/`, `.claude/scripts/`, `shared/project/`, `.azure-pipelines/`.
+- This repo (`ai-sdlc-orchestrator`), installed as a plugin into the target project via `copilot plugin install --from ...` or `claude plugin add --from ...`.
 - Access to an ADO organization with a non-production pilot project.
 - An Anthropic API key stored as `ANTHROPIC_API_KEY` secret in the pipeline library.
 - An ADO PAT with work item + code + build scopes stored as `ADO_PAT`.
-- A Slack incoming webhook URL stored as `SLACK_WEBHOOK_URL`.
+- A Slack or Teams incoming webhook URL stored as `SLACK_WEBHOOK_URL`.
